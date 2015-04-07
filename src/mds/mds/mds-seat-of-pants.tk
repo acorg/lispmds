@@ -1,0 +1,69 @@
+;;;----------------------------------------------------------------------
+;;;                             MISC
+;;;----------------------------------------------------------------------
+proc tolisp {arg} {
+  puts "$arg"; flush stdout
+}
+
+;;;----------------------------------------------------------------------
+;;;                            LAYOUT
+;;;----------------------------------------------------------------------
+
+canvas .c -height 600 -width 600
+pack .c
+
+;;;----------------------------------------------------------------------
+;;;                            TABLE
+;;;----------------------------------------------------------------------
+
+proc mkText {text x y} {
+  set id [.c create text $x $y -text $text -anchor sw -tag antigen -font -Adobe-Times-Medium-R-Normal-*-120-*]
+  tolisp "(set-text-tk-id $lisp_tk_stream_number $x $y $id)"
+}
+
+proc mvText {id dx dy} {
+  .c move $id $dx $dy
+}
+
+proc setTextXY {id x y} {
+  .c coords $id $x $y
+}
+
+proc setTextText {id text} {
+  .c itemconf $id -text $text
+}
+
+
+
+proc decTableValue {id} {
+  global lisp_tk_stream_number
+  tolisp "(dec-table-value $lisp_tk_stream_number $id)"
+}
+
+proc incTableValue {id} {
+  global lisp_tk_stream_number
+  tolisp "(inc-table-value $lisp_tk_stream_number $id)"
+}
+
+proc resetTableValue {id} {
+  global lisp_tk_stream_number
+  tolisp "(reset-table-value $lisp_tk_stream_number $id)"
+}
+
+;;;----------------------------------------------------------------------
+;;;                           MOUSE INTERFACE
+;;;----------------------------------------------------------------------
+
+focus .c
+
+.c bind antigen <Button-1> {
+  decTableValue [.c find withtag current] 
+}
+
+.c bind antigen <Button-2> {
+  resetTableValue [.c find withtag current] 
+}
+
+.c bind antigen <Button-3> {
+  incTableValue [.c find withtag current]
+}

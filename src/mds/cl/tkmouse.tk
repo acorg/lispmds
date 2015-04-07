@@ -1,0 +1,34 @@
+proc tolisp {arg} {
+  puts "$arg"; flush stdout
+}
+
+button .b -command {tolisp "(print 'hi)"}
+pack .b
+
+canvas .c
+pack .c
+
+proc mkDot {x y} {
+  .c create oval $x $y [expr $x+3] [expr $y+3] -tag node
+}
+
+proc mvDot {dot dx dy} {
+  .c move $dot $dx $dy
+  tolisp "(print (list $dot $dx $dy))"
+}
+
+focus .c
+
+bind .c <Button-1> {mkDot %x %y}
+
+.c bind node <Button-2> {
+  set curX %x
+  set curY %y
+}
+
+.c bind node <B2-Motion> {
+  mvDot [.c find withtag current] [expr %x-$curX] [expr %y-$curY]
+  set curX %x
+  set curY %y
+}
+

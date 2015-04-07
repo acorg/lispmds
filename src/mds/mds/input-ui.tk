@@ -1,0 +1,973 @@
+## TODO.  
+##  directory reconstruction on windows \ and /
+##     (maybe do by splitting one way, then the other if the length is 1)
+##  filenname suffixing on windows (ugly on mac because of the ^M)
+##  running on windows xp
+
+##  table into merge (and color code new points black and big, but then what about the reoptimizing--want to do from local scatter of just new?)
+##     do by two actions, adding in a table, with all the usual diagnostics, and positioning points at a place
+##     then one where we also start a set of local-scattered-batch-runs (and bring up the gui, so it can be watched)
+
+##  table into merge (and color code new points black and big, but then what about the reoptimizing--want to do from local scatter of just new?)
+##     do by two actions, adding in a tw?  by providing the new sequence and the old sequences, and making a new merge, then putting coords from the old into the new
+##  read in a sequence file, and have a threshold set, and be able to merge into a thresholded sequence file also 
+##        but ho
+##  running on windows xp
+
+
+
+###----------------------------------------------------------------------
+###                           WINDOWS
+###----------------------------------------------------------------------
+
+wm min . 0 0
+# wm geometry . +10+10   ;#how do we get center?
+wm geometry . +10+150    ;#from ron, 17aug2005, good position on windows
+wm title . "Input UI"
+
+###----------------------------------------------------------------------
+###                     INPUT FROM A FILE
+###----------------------------------------------------------------------
+
+# set initialDir "mds/data/"    now set in (make-input-ui)
+set initialFile ""   ;# unfortunately not accepted by tk_getOpenFile (why?)
+
+proc readFile {autoConvert numDims panel} {
+  ;# unfortunately -parent does not seem to work so the window is created in the middle
+  ;# of the screen.  and -initialFile does not apply for getOpenFile.  
+  global initialDir initialFile lisp_tk_stream_number
+  set types {
+    {""	{.hi .save .msf .sfi .txt}}	
+    {"All files" 	         *}
+    }
+  set file [tk_getOpenFile -filetypes $types -initialdir $initialDir]
+
+  if {![string match $file ""]} {
+#   toLisp "(display-error-and-continue (read-hi-table-into-tk-interface \"$file\" $autoConvert $numDims $panel))"
+#    toLisp "(read-hi-table-into-tk-interface \"$file\" $autoConvert $numDims $panel)"
+     toLisp "(tk-error-guard $lisp_tk_stream_number (read-hi-table-into-tk-interface \"$file\" $autoConvert $numDims $panel))"
+      
+    set fileComponents [split $file /] ;# will this work under MSwindows?
+    set initialFile [lindex $fileComponents [expr [llength $fileComponents]-1]]
+    set initialDir [string range $file 0 [expr [string length $file]-[string length $initialFile]-1]]
+  }
+}
+
+
+###----------------------------------------------------------------------
+###             Routine diagnostics
+###----------------------------------------------------------------------
+
+proc routineRunAndDiagnosticsOnSave {} {
+  global initialDir initialFile lisp_tk_stream_number
+  set types {
+    {"All files"		*}
+    }
+  set file [tk_getOpenFile -filetypes $types -initialdir $initialDir]
+
+  if {![string match $file ""]} {
+    set fileComponents [split $file /] ;# will this work under MSwindows?
+    set initialFile [lindex $fileComponents [expr [llength $fileComponents]-1]]
+    set initialDir [string range $file 0 [expr [string length $file]-[string length $initialFile]-1]]
+
+    set types {
+      {".save files"	{.save}}
+      {"All files"		*}
+      }
+    set masterSave [tk_getOpenFile -title "Master save against which to compare save" -filetypes $types -initialdir $initialDir]
+    if {![string match $masterSave ""]} {
+      set fileComponents [split $masterSave /] ;# will this work under MSwindows?
+      set initialFile [lindex $fileComponents [expr [llength $fileComponents]-1]]
+      set initialDir [string range $masterSave 0 [expr [string length $masterSave]-[string length $initialFile]-1]]
+
+      if {![string match $masterSave ""]} {
+        toLisp "(tk-error-guard $lisp_tk_stream_number (routine-diagnostics-on-table-or-save-from-gui \"$file\" :master-orientation-save-filename \"$masterSave\"))"
+      }
+    }
+  }
+}
+
+
+proc routineDiagnosticsOnSave {} {
+  global initialDir initialFile lisp_tk_stream_number
+  set types {
+    {".save files"	{.save}}
+    {"All files"		*}
+    }
+  set file [tk_getOpenFile -filetypes $types -initialdir $initialDir]
+
+  if {![string match $file ""]} {
+    set fileComponents [split $file /] ;# will this work under MSwindows?
+    set initialFile [lindex $fileComponents [expr [llength $fileComponents]-1]]
+    set initialDir [string range $file 0 [expr [string length $file]-[string length $initialFile]-1]]
+
+    set types {
+      {".save files"	{.save}}
+      {"All files"		*}
+      }
+    set masterSave [tk_getOpenFile -title "Master save against which to compare save" -filetypes $types -initialdir $initialDir]
+    if {![string match $masterSave ""]} {
+      set fileComponents [split $masterSave /] ;# will this work under MSwindows?
+      set initialFile [lindex $fileComponents [expr [llength $fileComponents]-1]]
+      set initialDir [string range $masterSave 0 [expr [string length $masterSave]-[string length $initialFile]-1]]
+
+      if {![string match $masterSave ""]} {
+        toLisp "(tk-error-guard $lisp_tk_stream_number (routine-diagnostics-on-existing-save-from-gui \"$file\" :master-orientation-save-filename \"$masterSave\"))"
+      }
+    }
+  }
+}
+
+
+###----------------------------------------------------------------------
+###                   TABLES TO MERGE INTO TABLE
+###----------------------------------------------------------------------
+
+proc getSaveFilename {title} {
+  global initialDir initialFile
+  set file [tk_getSaveFile -title $title -initialdir $initialDir -initialfile $initialFile]
+
+  if {![string match $file ""]} {
+    # set defaults for the next access 
+    set fileComponents [split $file /] ;# will this work under MSwindows?
+    set initialFile [lindex $fileComponents [expr [llength $fileComponents]-1]]
+    set initialDir [string range $file 0 [expr [string length $file]-[string length $initialFile]-1]]
+  }
+
+  return $file
+}
+
+
+proc readFilesToMerge {autoConvert numDims panel} {
+  global initialDir initialFile
+  set types {
+    {".save, .hi, or .txt files"	{.save .hi .txt}}	
+    {"All files"		*}
+    }
+  set filesToMerge [tk_getOpenFile -filetypes $types -initialdir $initialDir -multiple 1]
+
+  if {![string match $filesToMerge ""]} {
+    set file [lindex $filesToMerge 1]
+    set fileComponents [split $file /] ;# will this work under MSwindows?
+    set initialDir [join [lrange $fileComponents 0 [expr [llength $fileComponents] - 2]] "/"]
+    set initialFile "merge.txt"
+    set fileToWriteMergedTable [getSaveFilename "Where to write merge table and diagnostics"]
+    if {!($fileToWriteMergedTable == "")} {
+      set file [lindex $fileToWriteMergedTable 1]
+      set fileComponents [split $file /] ;# will this work under MSwindows?
+      set initialDir [join [lrange $fileComponents 0 [expr [llength $fileComponents] - 2]] "/"]
+
+      set types {
+        {"Save files"		{.save}}
+        {"All files"		*}}
+      set initialFile ""
+      set fileToWriteSave [getSaveFilename "Where to write save of merged tables"]
+      if {![string match $fileToWriteSave ""]} {
+        set file [lindex $fileToWriteSave 1]
+        set fileComponents [split $file /] ;# will this work under MSwindows?
+        set initialDir [join [lrange $fileComponents 0 [expr [llength $fileComponents] - 2]] "/"]
+
+        toLisp "(write-save-form (merge-tables-by-filename (explode-string #\\space \"$filesToMerge\") \"$fileToWriteMergedTable\" :autoConvert $autoConvert :panel $panel  :numDims $numDims :if-exists-action :supersede) \"$fileToWriteSave\" :if-exists :supersede)"
+    }}}
+}
+
+
+###----------------------------------------------------------------------
+###                           MERGE SAVES
+###----------------------------------------------------------------------
+
+proc readSavesToMerge {} {
+  global initialDir initialFile
+  set types {
+    {"Save files"		{.save}}	
+    {"All files"		*}
+    }
+  set filesToMerge [tk_getOpenFile -filetypes $types -initialdir $initialDir -multiple 1]
+
+  if {![string match $filesToMerge ""]} {
+    set file [lindex $filesToMerge 1]
+    set fileComponents [split $file /] ;# will this work under MSwindows?
+    set initialDir [join [lrange $fileComponents 0 [expr [llength $fileComponents] - 2]] "/"]
+    set initialFile "merge.txt"
+    set fileToWriteMerge [getSaveFilename "Where to write merge diagnostics"]
+    if {!($fileToWriteMerge == "")} {
+       toLisp "(eval (overlay-merge-saves-filenames (explode-string #\\space \"$filesToMerge\") :table-output-filename \"$fileToWriteMerge\" :if-exists-action :supersede))"
+    }}
+}
+
+
+###----------------------------------------------------------------------
+###                     TABLE TO MERGE INTO MAP
+###----------------------------------------------------------------------
+
+proc readTableToMergeIntoSave {autoConvert numDims panel freezeExistingPointsInSave} {
+  global initialDir initialFile
+  set types {
+    {"Save files"		{.save}}
+    {"All files"		*}}
+  set save [tk_getOpenFile -title "Save to be extended" -filetypes $types -initialdir $initialDir]
+  if {![string match $save ""]} {
+    set file [lindex $save 1]
+    set fileComponents [split $file /] ;# will this work under MSwindows?
+    set initialDir [join [lrange $fileComponents 0 [expr [llength $fileComponents] - 2]] "/"]
+
+    set types {
+      {".hi or .txt files"		{.hi .txt}}
+      {"All files"		*}}
+    set table [tk_getOpenFile -title "Table with which to extend save" -filetypes $types -initialdir $initialDir]
+
+    if {![string match $table ""]} {
+      set file [lindex $table 1]
+      set fileComponents [split $file /] ;# will this work under MSwindows?
+      set initialDir [join [lrange $fileComponents 0 [expr [llength $fileComponents] - 2]] "/"]
+
+      set types {
+        {"Save files"		{.save}}
+        {"All files"		*}}
+      set fileToWriteSave [getSaveFilename "Where to write save of save+table"]
+
+      if {![string match $fileToWriteSave ""]} {
+        set file [lindex $fileToWriteSave 1]
+        set fileComponents [split $file /] ;# will this work under MSwindows?
+        set initialDir [join [lrange $fileComponents 0 [expr [llength $fileComponents] - 2]] "/"]
+
+        set initialFile "merge.txt"
+
+        set types {
+          {"All files"		*}
+          {"Text files"		{.txt}}}
+        set fileToWriteDiagnostics [getSaveFilename "Where to write merge diagnostics"]
+
+        if {!($fileToWriteDiagnostics == "")} {
+          toLisp "(add-table-to-save-and-run-randomizing-only-new-points \"$save\" \"$table\" 10 :filename-to-write-save \"$fileToWriteSave\" :merge-diagnostics-filename \"$fileToWriteDiagnostics\" :if-exists-action :supersede :unmoveable-points-or-freeze-existing-points (bit->bool $freezeExistingPointsInSave))"
+        }}}}
+}
+
+
+###----------------------------------------------------------------------
+###                    READ TREEFILE TO REORDER
+###----------------------------------------------------------------------
+
+proc readTreefileToReorder {} {
+  global initialDir initialFile
+  set types {
+    {"All files"		*}
+    }
+  set treefile [tk_getOpenFile -title "Open treefile to reorder" -filetypes $types -initialdir $initialDir]
+
+  if {![string match $treefile ""]} {
+    set file [lindex $treefile 1]
+    set fileComponents [split $treefile /] ;# will this work under MSwindows?
+    set initialDir [join [lrange $fileComponents 0 [expr [llength $fileComponents] - 2]] "/"]  
+    set initialFile [join [lappend [lindex $fileComponents [expr [llength $fileComponents] - 1]] "reordered"] "."]   ;# on mac gets a ^M, ugly, so we only see the reordered
+    set fileToWrite [getSaveFilename "Where to save reordered tree"]
+    if {!($fileToWrite == "")} {
+       toLisp "(write-newick-tree (reorder-tree (read-newick-tree \"$treefile\")) \"$fileToWrite\" :if-exists-action :supersede)"
+    }}
+}
+
+      
+###----------------------------------------------------------------------
+###          COLOR DRAWGRAM POSTSCRIPT NAMES BY SAVE COLORS
+###----------------------------------------------------------------------
+
+proc colorDrawgramPsNamesBySaveColors {} {
+  global initialDir initialFile
+  set types {
+    {"Postscript files"		{.ps}}
+    {"All files"		*}
+    }
+  set drawgramPsFilename [tk_getOpenFile -title "Open drawgram postscrpt file to recolor" -filetypes $types -initialdir $initialDir]
+
+  if {![string match $drawgramPsFilename ""]} {
+    set file [lindex $drawgramPsFilename 1]
+    set fileComponents [split $drawgramPsFilename /] ;# will this work under MSwindows?
+    set initialDir [join [lrange $fileComponents 0 [expr [llength $fileComponents] - 2]] "/"]  
+    set initialFile [join [lappend [lindex $fileComponents [expr [llength $fileComponents] - 1]] "recolored"] "."]   ;# on mac gets a ^M, ugly, so we only see the reordered
+
+    set types {
+      {"Save files"		{.save}}
+      {"All files"		*}}
+      set saveFilename [tk_getOpenFile -title "Save from which to get colors" -filetypes $types -initialdir $initialDir]
+      set fileComponents [split $saveFilename /] ;# will this work under MSwindows?
+      set initialDir [join [lrange $fileComponents 0 [expr [llength $fileComponents] - 2]] "/"]  
+      set initialFile [join [lappend [lindex $fileComponents [expr [llength $fileComponents] - 1]] "recolored"] "."]   ;# on mac gets a ^M, ugly, so we only see the reordered
+
+      if {!($saveFilename == "")} {
+        set fileToWrite [getSaveFilename "Where to save recolored tree postscript file"]
+        if {!($fileToWrite == "")} {
+         toLisp "(color-drawgram-ps-labels-from-save \"$drawgramPsFilename\" (fi-in \"$saveFilename\") :output-filename \"$fileToWrite\" :if-exists :supersede)"
+    }}}
+}
+
+      
+proc colorDrawgramPsNamesByNameColorFile {} {
+  global initialDir initialFile
+  set types {
+    {"Postscript files"		{.ps}}
+    {"All files"		*}
+    }
+  set drawgramPsFilename [tk_getOpenFile -title "Open drawgram postscrpt file to recolor" -filetypes $types -initialdir $initialDir]
+
+  if {![string match $drawgramPsFilename ""]} {
+    set file [lindex $drawgramPsFilename 1]
+    set fileComponents [split $drawgramPsFilename /] ;# will this work under MSwindows?
+    set initialDir [join [lrange $fileComponents 0 [expr [llength $fileComponents] - 2]] "/"]  
+    set initialFile [join [lappend [lindex $fileComponents [expr [llength $fileComponents] - 1]] "recolored"] "."]   ;# on mac gets a ^M, ugly, so we only see the reordered
+
+    set types {
+      {"All files"		*}}
+      set nameColorFilename [tk_getOpenFile -title "Name-color file from which to get colors" -filetypes $types -initialdir $initialDir]
+      set fileComponents [split $nameColorFilename /] ;# will this work under MSwindows?
+      set initialDir [join [lrange $fileComponents 0 [expr [llength $fileComponents] - 2]] "/"]  
+      set initialFile [join [lappend [lindex $fileComponents [expr [llength $fileComponents] - 1]] "recolored"] "."]   ;# on mac gets a ^M, ugly, so we only see the reordered
+
+      if {!($nameColorFilename == "")} {
+        set fileToWrite [getSaveFilename "Where to save recolored tree postscript file"]
+        if {!($fileToWrite == "")} {
+         toLisp "(color-drawgram-ps-labels \"$drawgramPsFilename\" \"$nameColorFilename\" :output-filename \"$fileToWrite\" :if-exists :supersede)"
+    }}}
+}
+
+      
+
+
+###----------------------------------------------------------------------
+###                   READ TREEFILE INTO GUI
+###----------------------------------------------------------------------
+
+proc readTreefile {numDims} {
+  global initialDir initialFile
+  set types {
+    {"All files"		*}
+    }
+  set treefile [tk_getOpenFile -title "Open treefile" -filetypes $types -initialdir $initialDir]
+
+  if {![string match $treefile ""]} {
+    set file [lindex $treefile 1]
+    set fileComponents [split $treefile /] ;# will this work under MSwindows?
+    set initialDir [join [lrange $fileComponents 0 [expr [llength $fileComponents] - 2]] "/"]
+    toLisp "(eval (make-save-form :hi-table (node1-node2-distance-list-to-table (distances-from-newick-tree (read-newick-tree \"$treefile\"))) :mds-dimensions $numDims))"
+    }
+}
+
+
+###----------------------------------------------------------------------
+###                READ TREEFILE AND WRITE DISTANCE MATRIX
+###----------------------------------------------------------------------
+
+proc readTreefileToDistanceMatrix {} {
+  global initialDir initialFile
+  set types {
+    {"All files"		*}
+    }
+  set treefile [tk_getOpenFile -title "Open treefile" -filetypes $types -initialdir $initialDir]
+
+  if {![string match $treefile ""]} {
+    set file [lindex $treefile 1]
+    set fileComponents [split $treefile /] ;# will this work under MSwindows?
+    set initialDir [join [lrange $fileComponents 0 [expr [llength $fileComponents] - 2]] "/"]
+    set initialFile [join [lappend [lindex $fileComponents [expr [llength $fileComponents] - 1]] "dists"] "."]    ;# on mac gets a ^M, ugly, so we only see the reordered
+    set fileToWrite [getSaveFilename "Where to save distance matrix"]
+    if {!($fileToWrite == "")} {
+      toLisp "(pp-hi-table (node1-node2-distance-list-to-table (distances-from-newick-tree (read-newick-tree \"$treefile\"))) 'full 4 nil :num-significant-figures 8 :filename \"$fileToWrite\" :if-exists-action :supersede)"
+    }}
+}
+
+
+###----------------------------------------------------------------------
+###                READ TREEFILE AND WRITE DISTANCE TRIPLES
+###----------------------------------------------------------------------
+
+proc readTreefileToDistanceTriples {} {
+  global initialDir initialFile
+  set types {
+    {"All files"		*}
+    }
+  set treefile [tk_getOpenFile -title "Open treefile" -filetypes $types -initialdir $initialDir]
+
+  if {![string match $treefile ""]} {
+    set uglyTreefileCopy $treefile
+    set file [lindex $treefile 1]
+    set fileComponents [split $treefile /] ;# will this work under MSwindows?
+    set initialDir [join [lrange $fileComponents 0 [expr [llength $fileComponents] - 2]] "/"]
+    set initialFile [join [lappend [lindex $fileComponents [expr [llength $fileComponents] - 1]] "dists"] "."]    ;# on mac gets a ^M, ugly, so we only see the reordered
+    set fileToWrite [getSaveFilename "Where to save distance triples"]
+    if {!($fileToWrite == "")} {
+      toLisp "(pp-sorted-pair-and-distance-s (distances-from-newick-tree (read-newick-tree \"$uglyTreefileCopy\")) :filename \"$fileToWrite\" :if-exists-action :supersede)"
+    }}
+}
+
+
+###----------------------------------------------------------------------
+###             READ TREEFILE AND NAME PAIRS TO RENAME
+###----------------------------------------------------------------------
+
+proc treeRename {} {
+  global initialDir initialFile
+  set types {
+    {"All files"		*}
+    }
+  set treefile [tk_getOpenFile -title "Open treefile to reorder" -filetypes $types -initialdir $initialDir]
+
+  if {![string match $treefile ""]} {
+    set file [lindex $treefile 1]
+    set fileComponents [split $treefile /] ;# will this work under MSwindows?
+    set treeFileComponents $fileComponents
+    set initialDir [join [lrange $fileComponents 0 [expr [llength $fileComponents] - 2]] "/"]
+
+    set types {
+       {"All files"		*}
+       {"Text files"		{.txt}}
+       }
+    set namePairsFile [tk_getOpenFile -title "Open FROM-TO name-pair file" -filetypes $types -initialdir $initialDir]
+    if {![string match $namePairsFile ""]} {
+        set file [lindex $namePairsFile 1]
+	set fileComponents [split $file /] ;# will this work under MSwindows?
+	set initialDir [join [lrange $fileComponents 0 [expr [llength $fileComponents] - 2]] "/"]
+        set initialFile [join [lappend [lindex $treeFileComponents [expr [llength $treeFileComponents] - 1]] "renamed"] "."]    ;# on mac gets a ^M, ugly, so we only see the reordered
+
+	set fileToWrite [getSaveFilename "Where to write renamed tree"]
+
+	if {!($fileToWrite == "")} {
+	  toLisp "(write-newick-tree (substitute-names-in-tree-from-filename (read-newick-tree \"$treefile\") \"$namePairsFile\") \"$fileToWrite\" :if-exists-action :supersede)"
+    }}}
+}
+
+
+
+
+###----------------------------------------------------------------------
+###                             FASTA INTO MDS
+###----------------------------------------------------------------------
+
+proc fastaIntoMDS {} {
+  global initialDir initialFile lisp_tk_stream_number
+  set types {
+    {"Fasta"        {.fas .fasta}}
+    {"All files"		*}
+    }
+  set infile [tk_getOpenFile -title "Open fasta (or name-seq) file" -filetypes $types -initialdir $initialDir]
+
+  if {!($infile == "")} {
+    toLisp "(tk-error-guard $lisp_tk_stream_number (eval (nameSequencePairs-to-similarity-save (read-fas-format-or-name-sequence \"$infile\") :threshold '[.sequence-threshold-entry get] :num-dimensions [.num-dims-entry get])))"
+    }
+}
+
+proc fastaIntoMDSBlankSave {} {
+  global initialDir initialFile lisp_tk_stream_number
+  set types {
+    {"Fasta"        {.fas .fasta}}
+    {"All files"		*}
+    }
+  set infile [tk_getOpenFile -title "Open fasta (or name-seq) file" -filetypes $types -initialdir $initialDir]
+
+  if {!($infile == "")} {
+    toLisp "(tk-error-guard $lisp_tk_stream_number (eval (blank-save (nameSequencePairs-to-similarity-save (read-fas-format-or-name-sequence \"$infile\") :threshold '[.sequence-threshold-entry get] :num-dimensions [.num-dims-entry get]))))"
+    }
+}
+
+
+###----------------------------------------------------------------------
+###              REMOVE DUPLICATES FROM FASTA FILE
+###----------------------------------------------------------------------
+
+proc fastaDuplicates {action} {
+  global initialDir initialFile
+  set types {
+    {"All files"		*}
+    }
+  set infile [tk_getOpenFile -title "Open fasta file" -filetypes $types -initialdir $initialDir]
+
+  if {![string match $infile ""]} {
+    set file [lindex $infile 1]
+    set fileComponents [split $infile /] ;# will this work under MSwindows?
+    set infileComponents $fileComponents
+    set initialDir [join [lrange $fileComponents 0 [expr [llength $fileComponents] - 2]] "/"]
+
+    set outfile [getSaveFilename "Output file"]
+    if {!($outfile == "")} {
+    	  toLisp "(remove-duplicate-sequences-from-fasta-tk \"$infile\" \"$outfile\" '$action)"
+    }}
+}
+
+
+###----------------------------------------------------------------------
+###              REMOVE DUPLICATES FROM FASTA FILE
+###----------------------------------------------------------------------
+
+proc fastaUniqueNmaes {} {
+  global initialDir initialFile
+  set types {
+    {"All files"		*}
+    }
+  set infile [tk_getOpenFile -title "Open fasta file" -filetypes $types -initialdir $initialDir]
+
+  if {![string match $infile ""]} {
+    set file [lindex $infile 1]
+    set fileComponents [split $infile /] ;# will this work under MSwindows?
+    set infileComponents $fileComponents
+    set initialDir [join [lrange $fileComponents 0 [expr [llength $fileComponents] - 2]] "/"]
+
+    set outfile [getSaveFilename "Output file"]
+    if {!($outfile == "")} {
+    	  toLisp "(unique-fasta-names \"$infile\" \"$outfile\" :if-exists :supersede)"
+    }}
+}
+
+
+###----------------------------------------------------------------------
+###              REMOVE DUPLICATES FROM FASTA FILE
+###----------------------------------------------------------------------
+
+proc fastaCountACGTs {} {
+  global initialDir initialFile
+  set types {
+    {"All files"		*}
+    }
+  set infile [tk_getOpenFile -title "Open fasta file" -filetypes $types -initialdir $initialDir]
+
+  if {![string match $infile ""]} {
+    set file [lindex $infile 1]
+    set fileComponents [split $infile /] ;# will this work under MSwindows?
+    set infileComponents $fileComponents
+    set initialDir [join [lrange $fileComponents 0 [expr [llength $fileComponents] - 2]] "/"]
+
+    set outfile [getSaveFilename "Output file"]
+    if {!($outfile == "")} {
+    	  toLisp "(filename-count-ACGTs \"$infile\" \"$outfile\" :if-exists :supersede)"
+    }}
+}
+
+
+
+###----------------------------------------------------------------------
+###              Antigenic effect of substitutions
+###----------------------------------------------------------------------
+
+proc fileDialog {w ent operation types} {
+    global initialDir
+    if {$operation == "open"} {
+	set file [tk_getOpenFile -filetypes $types -parent $w]
+    } else {
+    if {$operation == "chooseDirectory"} {
+	set file [tk_chooseDirectory -initialdir $initialDir -parent $w]
+    } else {
+	set file [tk_getSaveFile -filetypes $types -parent $w \
+	    -initialfile Untitled -defaultextension .txt]
+    }}
+    if {[string compare $file ""]} {
+	$ent delete 0 end
+	$ent insert 0 $file
+	$ent xview end
+    }
+}
+
+
+proc agEffectOfSubstitutionsStep1 {} {
+
+  set w .filebox
+  toplevel $w
+  wm title $w "Generate ag-distance/mutations datafile"
+
+  label $w.msg -justify left -text "Generate ag-distance/mutations datafile."
+  pack $w.msg -side top
+
+  set f [frame $w.opensave]
+  label $f.lab -text "Select antigenic map save file: " -anchor e
+  entry $f.ent -width 20
+  button $f.but -text "Browse ..." -command "fileDialog $w $f.ent open {{\".save files\" {*.save}} {\"All files\" *}}"
+  pack $f.lab -side left
+  pack $f.ent -side left -expand yes -fill x
+  pack $f.but -side left
+  pack $f -fill x -padx 1c -pady 3
+
+  set f [frame $w.opensequences]
+  label $f.lab -text "Select name-sequence file: " -anchor e
+  entry $f.ent -width 20
+  button $f.but -text "Browse ..." -command "fileDialog $w $f.ent open {{\"All files\" *}}"
+  pack $f.lab -side left
+  pack $f.ent -side left -expand yes -fill x
+  pack $f.but -side left
+  pack $f -fill x -padx 1c -pady 3
+
+  set f [frame $w.interactionterms]
+  label $f.lab -text "Select interaction-term file (optional): " -anchor e
+  entry $f.ent -width 20
+  button $f.but -text "Browse ..." -command "fileDialog $w $f.ent open {{\"All files\" *}}"
+  pack $f.lab -side left
+  pack $f.ent -side left -expand yes -fill x
+  pack $f.but -side left
+  pack $f -fill x -padx 1c -pady 3
+
+  set f [frame $w.outputfile]
+  label $f.lab -text "Output file (use .csv suffix): " -anchor e
+  entry $f.ent -width 20
+  button $f.but -text "Browse ..." -command "fileDialog $w $f.ent save {{\"CVS files\" *.csv} {\"All files\" *}}"
+  pack $f.lab -side left
+  pack $f.ent -side left -expand yes -fill x
+  pack $f.but -side left
+  pack $f -fill x -padx 1c -pady 3
+
+  entry $w.upto-n-mutations-entry -width 5 -justify left
+  $w.upto-n-mutations-entry insert 0 "10"
+  label $w.upto-n-mutations-label -text "Upto this many mutations:" -anchor w
+  pack $w.upto-n-mutations-label -in $w -side left -fill x
+  pack $w.upto-n-mutations-entry -in $w -side left -fill x
+
+  frame $w.buttons
+  pack $w.buttons -side bottom -fill x -pady 2m
+  button $w.buttons.dismiss -text Done -command {
+    if {([.filebox.opensave.ent get] != "") && ([.filebox.opensequences.ent get] != "") && ([.filebox.outputfile.ent get] != "")} {
+      toLisp "(make-shape-sequence-regression-data-filenames \"[.filebox.opensave.ent get]\" \"[.filebox.opensequences.ent get]\" \"[.filebox.outputfile.ent get]\" :upto-n-mutations \'[.filebox.upto-n-mutations-entry get] :interaction-terms-filename \"[.filebox.interactionterms.ent get]\" )"
+    destroy .filebox
+    }
+  }
+  button $w.buttons.cancel -text Cancel -command {
+    destroy .filebox
+  }
+  pack $w.buttons.cancel -side left -expand 1
+  pack $w.buttons.dismiss -side right -expand 1
+}
+
+
+proc agEffectOfSubstitutionsStep2 {} {
+
+  set w .filebox
+  toplevel $w
+  wm title $w "Generate ag effect of mutations"
+
+  label $w.msg -justify left -text "Generate ag effect of mutations"
+  pack $w.msg -side top
+
+  set f [frame $w.differences]
+  label $f.lab -text "Select differences file: " -anchor e
+  entry $f.ent -width 20
+  button $f.but -text "Browse ..." -command "fileDialog $w $f.ent open {{\"All files\" *}}"
+  pack $f.lab -side left
+  pack $f.ent -side left -expand yes -fill x
+  pack $f.but -side left
+  pack $f -fill x -padx 1c -pady 3
+
+  set f [frame $w.unbiasfile]
+  label $f.lab -text "Select unbias file (blank for no unbiasing, use Default for a default unbiasing file): " -anchor e
+  entry $f.ent -width 20
+  $f.ent insert 0 ""
+  button $f.but -text "Browse ..." -command "fileDialog $w $f.ent open {{\"All files\" *}}"
+  pack $f.lab -side left
+  pack $f.ent -side left -expand yes -fill x
+  pack $f.but -side left
+  pack $f -fill x -padx 1c -pady 3
+
+  set f [frame $w.clustersfile]
+  label $f.lab -text "Select cluster file (optional): " -anchor e
+  entry $f.ent -width 20
+  button $f.but -text "Browse ..." -command "fileDialog $w $f.ent open {{\"All files\" *}}"
+  pack $f.lab -side left
+  pack $f.ent -side left -expand yes -fill x
+  pack $f.but -side left
+  pack $f -fill x -padx 1c -pady 3
+
+  set f [frame $w.outputdirectory]
+  label $f.lab -text "Select directory for output: " -anchor e
+  entry $f.ent -width 20
+  button $f.but -text "Browse ..." -command "fileDialog $w $f.ent chooseDirectory {{\"All files\" *}}"
+  pack $f.lab -side left
+  pack $f.ent -side left -expand yes -fill x
+  pack $f.but -side left
+  pack $f -fill x -padx 1c -pady 3
+
+  entry $w.remove-all-cols-with-lt-n-mutations-entry -width 5 -justify left
+  $w.remove-all-cols-with-lt-n-mutations-entry insert 0 "0"
+  label $w.remove-all-cols-with-lt-n-mutations-label -text "Remove cols with <n mutations (0 indicates no removal):" -anchor w
+  pack $w.remove-all-cols-with-lt-n-mutations-entry -in $w -side bottom -fill x
+  pack $w.remove-all-cols-with-lt-n-mutations-label -in $w -side bottom -fill x
+
+  entry $w.exclude-when-genetic-distances-gt-n-entry -width 5 -justify left
+  $w.exclude-when-genetic-distances-gt-n-entry insert 0 "1000"
+  label $w.exclude-when-genetic-distances-gt-n-label -text "Remove row when genetic-distance >n mutations (1000 is effectively no action):" -anchor w
+  pack $w.exclude-when-genetic-distances-gt-n-entry -in $w -side bottom -fill x
+  pack $w.exclude-when-genetic-distances-gt-n-label -in $w -side bottom -fill x
+
+  entry $w.low-se-threshold-entry -width 5 -justify left
+  $w.low-se-threshold-entry insert 0 "1000"
+  label $w.low-se-threshold-label -text "Low standard error threshold (1000 is effectively no action):" -anchor w
+  pack $w.low-se-threshold-entry -in $w -side bottom -fill x
+  pack $w.low-se-threshold-label -in $w -side bottom -fill x
+
+  entry $w.train-test-set-proportion-entry -width 5 -justify left
+  $w.train-test-set-proportion-entry insert 0 "1.0"
+  label $w.train-test-set-proportion-label -text "Train/test set proportion (use 1.0 to use all data in train set):" -anchor w
+  pack $w.train-test-set-proportion-entry -in $w -side bottom -fill x
+  pack $w.train-test-set-proportion-label -in $w -side bottom -fill x
+
+  frame $w.buttons
+  pack $w.buttons -side bottom -fill x -pady 2m
+  button $w.buttons.dismiss -text Done -command {
+    if {([.filebox.differences.ent get] != "") && ([.filebox.outputdirectory.ent get] != "")} {
+      toLisp "(regression-routine-diagnostics \"[.filebox.differences.ent get]\" \"[.filebox.outputdirectory.ent get]\" :remove-all-cols-with-lt-n-mutations \'[.filebox.remove-all-cols-with-lt-n-mutations-entry get] :exclude-when-genetic-distances-gt-n \'[.filebox.exclude-when-genetic-distances-gt-n-entry get] :low-se-threshold \'[.filebox.low-se-threshold-entry get] :clusters \"[.filebox.clustersfile.ent get]\" :train-test-set-proportion \'[.filebox.train-test-set-proportion-entry get] :unbias-alist \"[.filebox.unbiasfile.ent get]\" )"
+    destroy .filebox
+    }
+  }
+  button $w.buttons.cancel -text Cancel -command {
+    destroy .filebox
+  }
+  pack $w.buttons.cancel -side left -expand 1
+  pack $w.buttons.dismiss -side right -expand 1
+}
+
+
+
+###----------------------------------------------------------------------
+###        Map resolution calculations by leave-out-titer prediction
+###----------------------------------------------------------------------
+
+proc mapResolutionTest {} {
+
+  set w .filebox
+  toplevel $w
+  wm title $w "Map resolution test"
+
+  set f [frame $w.opensave]
+  label $f.lab -text "Select antigenic map save file: " -anchor e
+  entry $f.ent -width 20
+  button $f.but -text "Browse ..." -command "fileDialog $w $f.ent open {{\".save files\" {*.save}} {\"All files\" *}}"
+  pack $f.lab -side left
+  pack $f.ent -side left -expand yes -fill x
+  pack $f.but -side left
+  pack $f -fill x -padx 1c -pady 3
+
+  set f [frame $w.outputdir]
+  label $f.lab -text "Output directory: " -anchor e
+  entry $f.ent -width 20
+  button $f.but -text "Browse ..." -command "fileDialog $w $f.ent save {{\"All files\" *}}"
+  pack $f.lab -side left
+  pack $f.ent -side left -expand yes -fill x
+  pack $f.but -side left
+  pack $f -fill x -padx 1c -pady 3
+
+  entry $w.experiment-title-entry -width 5 -justify left
+  $w.experiment-title-entry insert 0 ""
+  label $w.experiment-title-label -text "Title of exeriment (optional):" -anchor w
+  pack $w.experiment-title-label -in $w -side top -fill x
+  pack $w.experiment-title-entry -in $w -side top -fill x
+
+  entry $w.dimensions-to-test-entry -width 5 -justify left 
+  $w.dimensions-to-test-entry insert 0 "1 2 3 4 5"
+  label $w.dimensions-to-test-label -text "Dimensions in which to test:" -anchor w
+  pack $w.dimensions-to-test-label -in $w -side top -fill x
+  pack $w.dimensions-to-test-entry -in $w -side top -fill x
+
+  entry $w.proportions-to-dont-care-entry -width 5 -justify left
+  $w.proportions-to-dont-care-entry insert 0 "0.1 0.2 0.3 0.4 0.5"
+  label $w.proportions-to-dont-care-label -text "Proprtions of titers to leave out:" -anchor w
+  pack $w.proportions-to-dont-care-label -in $w -side top -fill x
+  pack $w.proportions-to-dont-care-entry -in $w -side top -fill x
+
+  entry $w.num-random-replicates-entry -width 5 -justify left
+  $w.num-random-replicates-entry insert 0 "25"
+  label $w.num-random-replicates-label -text "Number of random trails per dimension and proportion left out:" -anchor w
+  pack $w.num-random-replicates-label -in $w -side top -fill x
+  pack $w.num-random-replicates-entry -in $w -side top -fill x
+
+  entry $w.num-runs-per-optimization-entry -width 5 -justify left
+  $w.num-runs-per-optimization-entry insert 0 "25"
+  label $w.num-runs-per-optimization-label -text "Number of mds runs on each table:" -anchor w
+  pack $w.num-runs-per-optimization-label -in $w -side top -fill x
+  pack $w.num-runs-per-optimization-entry -in $w -side top -fill x
+
+  frame $w.buttons
+  pack $w.buttons -side bottom -fill x -pady 2m
+  button $w.buttons.dismiss -text Done -command { 
+    if {([.filebox.opensave.ent get] != "") && ([.filebox.outputdir.ent get] != "")} {
+      toLisp "(map-resolution-determination-by-computational-titer-prediction \"[.filebox.opensave.ent get]\" \"[.filebox.outputdir.ent get]\" :experiment-title          \"[.filebox.experiment-title-entry get]\" :num-random-replicates     \'[.filebox.num-random-replicates-entry get] :num-runs-per-optimization \'[.filebox.num-runs-per-optimization-entry get] :dimensions-to-test        \'([.filebox.dimensions-to-test-entry get]) :proportions-to-dont-care  \'([.filebox.proportions-to-dont-care-entry get]) )"
+    destroy .filebox
+    }
+  }
+
+  button $w.buttons.cancel -text Cancel -command {
+    destroy .filebox
+  }
+  pack $w.buttons.cancel -side left -expand 1
+  pack $w.buttons.dismiss -side right -expand 1
+}
+
+
+###----------------------------------------------------------------------
+###                        BUTTONS
+###----------------------------------------------------------------------
+
+frame .num-dims
+entry .num-dims-entry -width 2 -justify right
+.num-dims-entry insert 0 2
+label .num-dims-label -text "Number of dimensions:" -anchor w
+pack .num-dims-label -in .num-dims -side left -fill x
+pack .num-dims-entry -in .num-dims -side right -fill x
+pack .num-dims -side top -fill x
+#.num-dims-entry get
+
+frame .convert
+set convert 1
+checkbutton .convert-button -variable convert
+#label .convert-label -text "Convert to distance matrix?" -anchor w
+label .convert-label -text "Auto identify table type?:" -anchor w
+pack .convert-label -in .convert -side left -fill x
+pack .convert-button -in .convert -side right -fill x
+pack .convert -side top -pady 2 -fill x
+
+frame .panel
+set panel 0
+label .panel-label -text "If HI table:" -anchor w
+radiobutton .panel-button -text panel -variable panel -value 1
+radiobutton .raw-button -text raw -variable panel -value 0
+pack .panel-label -in .panel -side left
+pack .panel-button -in .panel -side right -fill x
+pack .raw-button -in .panel -side right -fill x
+pack .panel -side top -pady 2 -fill x
+
+frame .sequence-threshold
+entry .sequence-threshold-entry -width 4 -justify right
+.sequence-threshold-entry insert 0 none
+label .sequence-threshold-label -text "If fasta, threshold:" -anchor w
+pack .sequence-threshold-label -in .sequence-threshold -side left -fill x
+pack .sequence-threshold-entry -in .sequence-threshold -side right -fill x
+pack .sequence-threshold -side top -fill x
+
+menubutton .action-button -text "Action" -direction below -menu .action-button.menu -relief raised
+menu .action-button.menu -tearoff 0
+
+.action-button.menu add command -label "Open table or save" -command {
+  readFile $convert [.num-dims-entry get] $panel
+}
+
+.action-button.menu add command -label "Routine run and diagnostics on table or save (not on MS Windows)" -command {
+  routineRunAndDiagnosticsOnSave
+}
+
+.action-button.menu add command -label "Routine diagnostics on already-run save (not on MS Windows)" -command {
+  routineDiagnosticsOnSave
+}
+
+.action-button.menu add command -label "Merge tables into table (and make save (no optimization))" -command {
+  readFilesToMerge $convert [.num-dims-entry get] $panel
+}
+
+.action-button.menu add command -label "Merge table into save (and optimize, relaxing all points)" -command {
+  readTableToMergeIntoSave $convert [.num-dims-entry get] $panel 0
+}
+
+.action-button.menu add command -label "Merge table into save (and optimize, freezing points in original save)" -command {
+  readTableToMergeIntoSave $convert [.num-dims-entry get] $panel 1
+}
+
+.action-button.menu add command -label "Overlay merge" -command {
+  readSavesToMerge
+}
+
+.action-button.menu add command -label "Reorder tree" -command {
+  readTreefileToReorder
+}
+
+.action-button.menu add command -label "Rename tree" -command {
+  treeRename
+}
+
+.action-button.menu add command -label "Recolor drawgram  postscript by colors in save" -command {
+  colorDrawgramPsNamesBySaveColors
+}
+
+.action-button.menu add command -label "Recolor drawgram postscript by name-color file" -command {
+  colorDrawgramPsNamesByNameColorFile
+}
+
+.action-button.menu add command -label "Tree distance matrix" -command {
+  readTreefileToDistanceMatrix
+}
+
+.action-button.menu add command -label "Tree distance list" -command {
+  readTreefileToDistanceTriples
+}
+
+.action-button.menu add command -label "Open treefile" -command {
+  readTreefile [.num-dims-entry get]
+}
+
+.action-button.menu add command -label "Fasta (or name-seq) into MDS" -command {
+  fastaIntoMDS 
+}
+
+.action-button.menu add command -label "Fasta (or name-seq) into MDS, do not show distances in table window (for speed)" -command {
+  fastaIntoMDSBlankSave
+}
+
+.action-button.menu add command -label "Fasta duplicates remove" -command {
+  fastaDuplicates removeDuplicatesOnly              
+}
+.action-button.menu add command -label "Fasta duplicates diagnostics" -command {
+  fastaDuplicates removeDuplicatesDiagnosticsOnly   
+}
+.action-button.menu add command -label "Fasta duplicates remove diagnostics in file" -command {
+  fastaDuplicates removeDuplicatesIncludeDiagnostics
+}
+
+.action-button.menu add command -label "Fasta make sequence names unique" -command {
+  fastaUniqueNmaes
+}
+
+.action-button.menu add command -label "Fasta count ACGTs" -command {
+  fastaCountACGTs
+}
+
+
+.action-button.menu add command -label "Ag effect of substitutions (step 1, generate raw data)" -command {
+  agEffectOfSubstitutionsStep1
+}
+
+.action-button.menu add command -label "Ag effect of substitutions (step 2, process raw data)" -command {
+  agEffectOfSubstitutionsStep2
+}
+
+
+
+.action-button.menu add command -label "Map resolution test" -command {
+  mapResolutionTest
+}
+
+
+
+
+# .action-button.menu add command -label "Distances through clusters" -command {
+#   distancesThroughClusters
+# }
+
+
+button .dismiss-button -text "Dismiss" -command { 
+  tolisp "(tk-close $lisp_tk_stream_number)"
+}
+
+# button .sparrow -text "ds" -command { 
+# 	tolisp "(send-null-string-to-open-streams)"
+# }
+
+# button .jo-wu-hack-button -text "Jo-Wu hack" -command { 
+#     set types {
+#	{"All files"		*}
+#	{"Text files"		{.txt}}	
+#    }
+#    set file [tk_getOpenFile -filetypes $types -initialdir $initialDir]
+#
+#    if {![string match $file ""]} {
+#	toLisp "(make-jo-wu-prediction-tables \"$file\"))"
+#    }
+# }
+
+frame .buttons
+pack .buttons -fill x -expand 1
+# pack .sparrow -in .buttons -side left
+pack .action-button -in .buttons -side left -fill x -expand 1
+pack .dismiss-button -in .buttons -side right
+# pack .jo-wu-hack-button -side bottom -fill x
+
+# raise .sparrow
+raise .action-button
+raise .dismiss-button

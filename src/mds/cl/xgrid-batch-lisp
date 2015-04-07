@@ -1,0 +1,5 @@
+#!/bin/bash
+
+# usagae xgrid-batch-lisp inputfile outputfile 
+
+/home/dsmith/mds/bin/acl80/alisp -e "(progn (load \"/home/dsmith/.clinit.cl\") (fi (eval (fi-in \"$1\")) \"$2\"))" -kill

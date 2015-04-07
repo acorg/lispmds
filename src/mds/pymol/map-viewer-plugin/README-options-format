@@ -1,0 +1,82 @@
+# -*- mode: python; -*-
+
+# Important notes:
+#
+# 1. make sure you keep whitespace indentation consistent in this file,
+#    as it is read as python code.
+#
+# 2. All the option names given below are just examples.
+#    You can find the full set of recognized options in ../lib/Options.py
+
+
+# -----------------------------------------------------------------------------
+# CREATING CGO GROUPS MANUALLY
+#
+# You can use simpleCGOGroup to create your own CGO sets.
+# E.g.,
+# simpleCGOGroup(name='purplesphere', data=[COLOR, 1.0, 0.0, 1.0, SPHERE, 0.0, 0.0, 0.0, 3.0])
+# simpleCGOGroup(name='smallsphere', hidden=True, data=[SPHERE, 0.0, 0.0, 0.0, 0.2])
+#
+# See http://pymol.sourceforge.net/newman/user/S0500cgo.html for some help on what
+# you can pass in the 'data' argument.
+#
+# TODO(?): CGO groups displayed in this way will have no bounding box.
+
+# -----------------------------------------------------------------------------
+# CREATING TITER PLANES MANUALLY
+#
+# You can use TiterPlane to create titer planes.
+# E.g.,
+# TiterPlane(30, 'titer plane', (1.0, 0.0, 0.0), 3, -10, 20, -5, 15).load()
+#
+# See ../lib/TiterPlane.py for argument details.
+#
+# TODO(?): Titer planes displayed in this way will have no bounding box.
+
+
+# -----------------------------------------------------------------------------
+# SETTING OVERALL DEFAULTS
+#
+# The following are general options - applicable to the overall image or
+# image production process. The system default options will be updated from
+# your changes here (if any). E.g.,
+#
+# options.update({
+#     'background color' : (0.0, 0.1, 0.2),
+#     'light-colored background' : False,
+# })
+
+
+# -----------------------------------------------------------------------------
+# SETTING MAP DEFAULTS
+#
+# The default options for (all) maps are in defaultMapOptions.
+#
+# You can change a default value here. The possible options
+# (the keys in the dictionary below) are the same as those that can be set
+# for an individual map (see next section below). E.g.,
+# 
+# defaultMapOptions.update({
+#     'strain radius' : 0.4,
+#     'titer compute' : False,
+#     'bounding box buffer' : 2.0,
+# })
+
+
+# -----------------------------------------------------------------------------
+# SETTING PER-MAP DEFAULTS
+#
+# perMapOptions gives options per-map. The keys in this dictionary are
+# the file names given to abl().  Where present, these options override the
+# defaults found in defaultMapOptions.  All of the following may be
+# omitted.
+
+perMapOptions.update({
+    '/tmp/map1.pml' : {
+	'cgo prefix' : 'map1_',
+	}
+    
+    '/tmp/map2.pml' : {
+	'cgo prefix' : 'map2_',
+	}
+    })

@@ -1,0 +1,12 @@
+#!/bin/bash
+
+# usagae acl-dim-anneal-two-phase inputfile outputfile input-num-dims output-num-dims and optional num-runs
+
+if [ -n "$5" ]; then
+  mds/bin/acl80/alisp -e "(progn (load \"/home/dsmith/.clinit.cl\") (fi (lisp-dim-anneal-two-phase-from-save (fi-in \"$1\") :dim-anneal-starting-dimension $3 :dim-anneal-ending-dimension $4 :num-runs $5) \"$2\"))" -kill
+else
+  mds/bin/acl80/alisp -e "(progn (load \"/home/dsmith/.clinit.cl\") (fi (lisp-dim-anneal-two-phase-from-save (fi-in \"$1\") :dim-anneal-starting-dimension $3 :dim-anneal-ending-dimension $4) \"$2\"))" -kill
+fi
+
+
+

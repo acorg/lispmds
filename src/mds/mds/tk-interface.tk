@@ -1,0 +1,613 @@
+
+###----------------------------------------------------------------------
+###                        SCROLL FUNCTIONS
+###----------------------------------------------------------------------
+
+proc x-scroll-canvas-and-sera args {
+  # hack the handling of 2 or 3 args depending on whether the scroll bar is moved, or arrows are clicked
+  # there must be a better way of handling default args in tk than this...
+  global .c .c-sera
+  if {([llength $args]) == 2} {
+    .c xview [lindex $args 0] [lindex $args 1]
+    .c-sera xview [lindex $args 0] [lindex $args 1]
+  } else {
+    .c xview [lindex $args 0] [lindex $args 1] [lindex $args 2]
+    .c-sera xview [lindex $args 0] [lindex $args 1] [lindex $args 2]
+  }
+}
+
+proc y-scroll-canvas-and-antigens args {
+  # hack the handling of 2 or 3 args depending on whether the scroll bar is moved, or arrows are clicked
+  # there must be a better way of handling default args in tk than this...
+  global .c .c-sera
+  if {([llength $args]) == 2} {
+    .c yview [lindex $args 0] [lindex $args 1]
+    .c-antigens yview [lindex $args 0] [lindex $args 1]
+  } else {
+    .c yview [lindex $args 0] [lindex $args 1] [lindex $args 2]
+    .c-antigens yview [lindex $args 0] [lindex $args 1] [lindex $args 2]
+  }
+}
+
+
+###----------------------------------------------------------------------
+###                           WINDOWS
+###----------------------------------------------------------------------
+
+wm min . 0 0
+
+wm geometry . +10-20   ;# to put in the bottom left corner
+#wm geometry . +10+1200   ;# to put off screen for batch runs
+
+#wm title . "Table"
+
+frame .left
+frame .right
+frame .right.menu   
+frame .right.main   
+frame .right.xscroll
+frame .right.sera   
+
+pack .left  -fill y    -side left 
+pack .right -fill both -expand 1 -side left
+
+pack .right.sera    -in .right -fill x     -side top           
+pack .right.main    -in .right -fill both -expand 1 -side top  
+pack .right.xscroll -in .right -fill x     -side top        
+pack .right.menu    -in .right -fill x     -side top           
+
+canvas .c-sera-left  -width 10 -height 22 ;# width will later be set to be the width of the antigen-canvas by lisp
+canvas .c-sera -width 10 -height 20 -bg gray85 -xscrollcommand ".xscroll set"
+frame .c-sera-right -width 21 -height 22
+
+pack .c-sera-left -in .right.sera -side left
+pack .c-sera -in .right.sera -fill x -side left -expand 1
+pack .c-sera-right -in .right.sera -side left
+
+canvas .c-antigens -width 10 -height 10 -bg gray85 -yscrollcommand ".yscroll set"
+canvas .c -bg gray85 -width 10 -height 10 -xscrollcommand ".xscroll set" -yscrollcommand ".yscroll set" ;# width set by lisp
+## .c configure -width 550 -height 350
+
+scrollbar .xscroll -orient horizontal -command "x-scroll-canvas-and-sera"
+scrollbar .yscroll -command "y-scroll-canvas-and-antigens"
+
+pack .c-antigens -in .right.main -fill y -side left 
+pack .c -in .right.main -fill both -expand yes -side left
+pack .yscroll -in .right.main -fill y -side left
+
+canvas .xscroll-left  -width 10 -height 21 ;#21 ;# width will later be set to be the width of the antigen-canvas by lisp
+frame .xscroll-right -width 21 -height 21
+
+pack .xscroll-left -in .right.xscroll -side left
+pack .xscroll -in .right.xscroll -fill x -side left -expand 1    ;# needed this expand here (note not on .right.xscroll
+pack .xscroll-right -in .right.xscroll -side left
+
+focus .c   ;# draws a nice rectangle around the canvas
+
+###----------------------------------------------------------------------
+###                       standard buttons
+###----------------------------------------------------------------------
+
+button .print-button -bitmap @$bitmapDir/printer.xbm -command { 
+    .c postscript -file "mds/ps/hi.ps"
+}
+
+button .quit-button -bitmap @$bitmapDir/quit.xbm -command { 
+    tolisp "'eof"
+}
+
+###----------------------------------------------------------------------
+###                            CALL MDS
+###----------------------------------------------------------------------
+
+button .metric-mds-button -bitmap @$bitmapDir/m.xbm -command {
+  global lisp_tk_stream_number
+  tolisp "(mds-hi-table $lisp_tk_stream_number 'metric-mds)"
+}
+
+button .ordinal-full-mds-button -bitmap @$bitmapDir/ordinal-full.xbm -command {
+  global lisp_tk_stream_number
+  tolisp "(mds-hi-table $lisp_tk_stream_number 'ordinal-full-mds)"
+}
+
+button .ordinal-partial-mds-button -bitmap @$bitmapDir/ordinal-partial.xbm -command {
+  global lisp_tk_stream_number
+  tolisp "(mds-hi-table $lisp_tk_stream_number 'ordinal-partial-mds)"
+}
+
+
+button .hillclimb-button -bitmap @$bitmapDir/hillclimb-new-window.xbm -command { 
+  global lisp_tk_stream_number algorithm stressComponent comparison
+  tolisp "(mds-hi-table $lisp_tk_stream_number '$algorithm '$stressComponent '$comparison :existing-mds-window nil :num-trials 0 :num-climbs 0)"
+}
+
+button .batch-hillclimb-button -bitmap @$bitmapDir/batch-runs.xbm -command { 
+  global lisp_tk_stream_number algorithm stressComponent comparison
+## later add this functionality   tolisp "(mds-hi-table $lisp_tk_stream_number '$algorithm '$stressComponent '$comparison nil 0 0)"
+## this functionality should also be on the batch-ui window
+#  tolisp "(batch-mds-from-tk-interface $lisp_tk_stream_number)"
+  tolisp "(make-batch-mds-window $lisp_tk_stream_number)"
+}
+
+button .batch-hillclimb-stop-button -bitmap @$bitmapDir/batch-runs-stop.xbm -command { 
+# the stop should really be in the batch window, but the batch window is not listening to commands
+# when it is waiting for lisp to run.  and if we have the batch run going on in the background, then
+# we get confused at the moment with updates to the batch list (and the lisp stuff is not reentrant either)
+# one stop for each click of run in the batch ui.
+  toLisp "(progn (setq *stop-batch-runs-from-batch-runs-ui* t) (setq *stop-optimization* t))"
+}
+
+
+###----------------------------------------------------------------------
+###                  SAVE TO A FILE and READ FROM FILE
+###----------------------------------------------------------------------
+
+set initialDir "mds/mds/plot-specs/"
+set initialFile ""   ;# unfortunately not accepted by tk_getOpenFile (why?)
+
+proc getSaveFilename {title} {
+  ;# unfortunately -parent does not seem to work so the window is created in the middle
+  ;# of the screen.  and -initialFile does not apply for getOpenFile.  
+  global initialDir initialFile 
+  set file [tk_getSaveFile -title $title -initialdir $initialDir]
+
+  if {![string match $file ""]} {
+    # set defaults for the next access 
+    set fileComponents [split $file /] ;# will this work under MSwindows?
+    set initialFile [lindex $fileComponents [expr [llength $fileComponents]-1]]
+    set initialDir [string range $file 0 [expr [string length $file]-[string length $initialFile]-1]]
+  }
+
+  return $file
+}
+
+proc getOpenFilename {title} {
+  ;# unfortunately -parent does not seem to work so the window is created in the middle
+  ;# of the screen.  and -initialFile does not apply for getOpenFile.  
+  global initialDir initialFile 
+  set file [tk_getOpenFile -title $title -initialdir $initialDir]
+
+  if {![string match $file ""]} {
+    # set defaults for the next access 
+    set fileComponents [split $file /] ;# will this work under MSwindows?
+    set initialFile [lindex $fileComponents [expr [llength $fileComponents]-1]]
+    set initialDir [string range $file 0 [expr [string length $file]-[string length $initialFile]-1]]
+  }
+
+  return $file
+}
+
+
+###----------------------------------------------------------------------
+###                          INPUT SPECIFICATIONS
+###----------------------------------------------------------------------
+
+button .input-plot-spec-button -bitmap @$bitmapDir/plot-spec.xbm -command { 
+  set filename [getOpenFilename "Enter filename of a plotspec file or save"]
+  if {!($filename == "")} {
+    tolisp "(tk-error-guard $lisp_tk_stream_number (input-plot-spec $lisp_tk_stream_number \"$filename\"))"
+  }
+}
+
+###----------------------------------------------------------------------
+###                            TEXT
+###----------------------------------------------------------------------
+
+proc mkText {text x y tag anchor font} {
+# .c create text $x $y -text $text -anchor $anchor -tag $tag -font -Adobe-Times-Medium-R-Normal-*-120-*
+#  .c create text $x $y -text $text -anchor $anchor -tag $tag -font -adobe-times-medium-r-normal--14-140-75-75-p-74-iso8859-1
+#    .c create text $x $y -text $text -anchor $anchor -tag $tag -font {times 12}
+    .c create text $x $y -text $text -anchor $anchor -tag $tag -font $font
+}
+
+proc mkTextCanvas {canvas text x y tag anchor font} {
+# .c create text $x $y -text $text -anchor $anchor -tag $tag -font -Adobe-Times-Medium-R-Normal-*-120-*
+#  .c create text $x $y -text $text -anchor $anchor -tag $tag -font -adobe-times-medium-r-normal--14-140-75-75-p-74-iso8859-1
+#    .c create text $x $y -text $text -anchor $anchor -tag $tag -font {times 12}
+# $canvas create text $x $y -text $text -anchor $anchor -tag $tag -font {MSSansSerif 7}
+#    $canvas create text $x $y -text $text -anchor $anchor -tag $tag -font {Tahoma 7}
+  $canvas create text $x $y -text $text -anchor $anchor -tag $tag -font $font
+}
+
+proc mkTableValue {value x y font} {
+  mkText $value $x $y tableValue se $font
+}
+
+proc mkPredictionStress {text x y font} {
+  mkText $text $x $y predictionStress sw $font
+}
+
+proc mvText {id dx dy} {
+  .c move $id $dx $dy
+}
+
+proc setTextXY {id x y} {
+  .c coords $id $x $y
+}
+
+proc setTextText {id text} {
+  .c itemconf $id -text $text
+}
+
+
+###----------------------------------------------------------------------
+###                      ANTIGEN INTERFACE
+###----------------------------------------------------------------------
+
+proc newAntigen {node what normalize} {
+  global lisp_tk_stream_number hiTableName
+  tolisp "(new-selection $lisp_tk_stream_number $node '$what $normalize '$hiTableName)"
+}
+
+set normalize 2
+set nonormalize nil
+
+.c bind antigen <Button-1> {
+  newAntigen [.c find withtag current] vaccine1 $nonormalize
+}
+
+.c bind antigen <Button-2> {
+  newAntigen [.c find withtag current] vaccine2 $nonormalize
+}
+
+.c bind antigen <Button-3> {
+  newAntigen [.c find withtag current] epidemic $nonormalize
+}
+
+
+.c bind antigen <Shift-Button-1> {
+  newAntigen [.c find withtag current] vaccine1 $normalize
+}
+
+.c bind antigen <Shift-Button-2> {
+  newAntigen [.c find withtag current] vaccine2 $normalize
+}
+
+.c bind antigen <Shift-Button-3> {
+  newAntigen [.c find withtag current] epidemic $normalize
+}
+
+
+###----------------------------------------------------------------------
+###                      TABLE VALUE INTERFACE
+###----------------------------------------------------------------------
+
+proc changeTableValue {id function amount what} {
+  global lisp_tk_stream_number
+  tolisp "(change-table-value $lisp_tk_stream_number $id '$function $amount '$what)"
+}
+
+proc resetTableValue {id what} {
+  global lisp_tk_stream_number
+  tolisp "(reset-table-value $lisp_tk_stream_number $id '$what)"
+}
+
+set changeTableWhat "single-value"
+
+set changeTableOperator "dont-care"
+
+set changeTableRightAmount 1.0
+set changeTableRightShiftAmount 0.1
+set changeTableLeftAmount -1.0
+set changeTableLeftShiftAmount -0.1
+
+button .plus-button -bitmap @$bitmapDir/plus.xbm -command {
+  global changeTableOperator
+  set changeTableOperator "+"
+  set changeTableRightAmount 1.0
+  set changeTableRightShiftAmount 0.1
+  set changeTableLeftAmount -1.0
+  set changeTableLeftShiftAmount -0.1
+}
+
+button .times-button -bitmap @$bitmapDir/times.xbm -command {
+  global changeTableOperator
+  set changeTableOperator "*"
+  set changeTableRightAmount 2.0
+  set changeTableRightShiftAmount 1.11111111
+  set changeTableLeftAmount 0.5
+  set changeTableLeftShiftAmount 0.9
+}
+
+button .coarse-button -bitmap @$bitmapDir/coarse.xbm -command {
+  global changeTableOperator
+  set changeTableOperator "finest-measure"
+  set changeTableRightAmount      0.5
+  set changeTableRightShiftAmount 1.0
+  set changeTableLeftAmount       0.1
+  set changeTableLeftShiftAmount  0.25
+}
+
+button .dont-care-button -bitmap @$bitmapDir/dont-care.xbm -command {
+  global changeTableOperator
+  set changeTableOperator "dont-care"
+  set changeTableRightAmount      'dont-care
+  set changeTableRightShiftAmount 'dont-care
+  set changeTableLeftAmount       'dont-care
+  set changeTableLeftShiftAmount  'dont-care
+}
+
+# button .hi-button -bitmap @$bitmapDir/hi.xbm -command {
+#  global changeTableOperator
+#  set changeTableOperator "hi"
+#  set changeTableRightAmount      'convert-from-hi
+#  set changeTableRightShiftAmount 'up
+#  set changeTableLeftAmount       'convert-to-hi
+#  set changeTableLeftShiftAmount  'down
+# }
+
+# button .hi-and-round-button -bitmap @$bitmapDir/hi-and-round.xbm -command {
+#  global changeTableOperator
+#  set changeTableOperator "hi"
+#  set changeTableRightAmount      'convert-from-hi
+#  set changeTableRightShiftAmount 'up
+#  set changeTableLeftAmount       'convert-to-hi-and-round
+#  set changeTableLeftShiftAmount  'down
+# }
+
+button .single-value-change-button -bitmap @$bitmapDir/single-value.xbm -command {
+  global changeTableWhat
+  set changeTableWhat "single-value"
+}
+
+button .row-values-change-button -bitmap @$bitmapDir/row-values.xbm -command {
+  global changeTableWhat
+  set changeTableWhat "row-values"
+}
+
+button .column-values-change-button -bitmap @$bitmapDir/column-values.xbm -command {
+  global changeTableWhat
+  set changeTableWhat "column-values"
+}
+
+button .ortho-values-change-button -bitmap @$bitmapDir/ortho-values.xbm -command {
+  global changeTableWhat
+  set changeTableWhat "ortho-values"
+}
+
+button .ten-percent-random-values-change-button -bitmap @$bitmapDir/ten-percent-random-values.xbm -command {
+  global changeTableWhat
+  set changeTableWhat "ten-percent-random-values"
+  changeTableValue 'no-id $changeTableOperator $changeTableLeftAmount $changeTableWhat  ;# SPECIAL CASE
+}
+
+bind .ten-percent-random-values-change-button <Button-3> {
+  global changeTableWhat
+  set changeTableWhat "ten-percent-random-values-same-seed"
+  changeTableValue 'no-id $changeTableOperator $changeTableLeftAmount $changeTableWhat  ;# SPECIAL CASE
+}
+
+set controlPressed 0
+button .all-values-change-button -bitmap @$bitmapDir/all-values.xbm -command {
+  global changeTableWhat controlPressed
+  set changeTableWhat "all-values"
+    if {($controlPressed == 0)} {
+	changeTableValue 'no-id $changeTableOperator $changeTableLeftAmount $changeTableWhat  ;# SPECIAL CASE
+    } else {
+	set controlPressed 0
+    }
+}
+bind .all-values-change-button <Control-Button-1> {
+  global changeTableWhat controlPressed
+  set changeTableWhat "all-values"
+  resetTableValue 'no-id $changeTableWhat
+  set controlPressed 1
+}
+
+
+
+.c bind tableValue <Button-1> {
+  changeTableValue [.c find withtag current] $changeTableOperator $changeTableLeftAmount $changeTableWhat
+}
+
+.c bind tableValue <Shift-Button-1> {
+  changeTableValue [.c find withtag current] $changeTableOperator $changeTableLeftShiftAmount $changeTableWhat
+}
+
+.c bind tableValue <Control-Button-1> {
+  resetTableValue [.c find withtag current] $changeTableWhat
+}
+
+.c bind tableValue <Button-3> {
+  changeTableValue [.c find withtag current] $changeTableOperator $changeTableRightAmount $changeTableWhat
+}
+
+.c bind tableValue <Shift-Button-3> {
+  changeTableValue [.c find withtag current] $changeTableOperator $changeTableRightShiftAmount $changeTableWhat
+}
+
+
+###----------------------------------------------------------------------
+###                          PRINTING
+###----------------------------------------------------------------------
+
+set home         $env(HOME)
+set postscript_dir    $home/ps
+
+proc ps_page {widget file} {
+  $widget postscript -file $file -pagewidth 6.5i -pageheight 9i -rotate 1
+}
+
+bind .c 1 {ps_page .c $postscript_dir/xy1.ps}
+bind .c 2 {ps_page .c $postscript_dir/xy2.ps}
+bind .c 3 {ps_page .c $postscript_dir/xy3.ps}
+bind .c 4 {ps_page .c $postscript_dir/xy4.ps}
+bind .c 5 {
+	exec ~dsmith/bin/imps4 > ~dsmith/ps/delete-wish.ps
+	exec ghostview -monochrome ~dsmith/ps/delete-wish.ps
+}
+
+
+###----------------------------------------------------------------------
+###                   MENU OF WHICH ALGORITHM
+###----------------------------------------------------------------------
+
+#cant get eval right and dont want to spend time at the moment
+#proc addMenuAlgorithmItem {prettyName functionName} {
+#  .menuAlgorithmButton.menuAlgorithmMenu add command -label $prettyName \
+#    -command {
+#      set algorithm $functionName
+#      toLisp (print '$algorithm)
+#      .menuAlgorithmButton config -text $prettyName
+#     }
+#}
+
+set algorithm metric-mds-global-norm-conjugant-gradient
+menubutton .menuAlgorithmButton -text "Metric (global norm) (CG)" -menu .menuAlgorithmButton.menuAlgorithmMenu
+menu .menuAlgorithmButton.menuAlgorithmMenu
+.menuAlgorithmButton.menuAlgorithmMenu add command -label "Metric (global norm) (CG)" \
+  -command { 
+    set algorithm metric-mds-global-norm-conjugant-gradient
+    .menuAlgorithmButton config -text "Metric (global norm) (CG)"
+   }
+.menuAlgorithmButton.menuAlgorithmMenu add command -label "Metric (local norm) (CG)" \
+  -command { 
+    set algorithm metric-mds-local-norm-conjugant-gradient
+    .menuAlgorithmButton config -text "Metric (local norm) (CG)"
+   }
+.menuAlgorithmButton.menuAlgorithmMenu add command -label "Metric (global norm) (HC)" \
+  -command { 
+    set algorithm metric-mds-global-norm
+    .menuAlgorithmButton config -text "Metric (global norm) (HC)"
+   }
+.menuAlgorithmButton.menuAlgorithmMenu add command -label "Metric (local norm) (HC)" \
+  -command { 
+    set algorithm metric-mds-local-norm
+    .menuAlgorithmButton config -text "Metric (local norm) (HC)"
+   }
+.menuAlgorithmButton.menuAlgorithmMenu add command -label "Ordinal (full)" \
+  -command {
+    set algorithm ordinal-full-mds
+    .menuAlgorithmButton config -text "Ordinal (full)"
+  }
+.menuAlgorithmButton.menuAlgorithmMenu add command -label "Ordinal (partial)" \
+  -command {
+    set algorithm ordinal-partial-mds
+    .menuAlgorithmButton config -text "Ordinal (partial)"
+  }
+
+set stressComponent square
+menubutton .menuStressButton -text "square" -menu .menuStressButton.menuStressMenu
+menu .menuStressButton.menuStressMenu
+.menuStressButton.menuStressMenu add command -label "square" \
+  -command {
+    set stressComponent square
+    .menuStressButton config -text "square"
+  }
+.menuStressButton.menuStressMenu add command -label "squash" \
+  -command {
+    set stressComponent squash
+    .menuStressButton config -text "squash"
+  }
+.menuStressButton.menuStressMenu add command -label "log-squash" \
+  -command {
+    set stressComponent log-squash
+    .menuStressButton config -text "log-squash"
+  }
+.menuStressButton.menuStressMenu add command -label "log-squash-minus" \
+  -command {
+    set stressComponent log-squash-minus
+    .menuStressButton config -text "log-squash-minus"
+  }
+.menuStressButton.menuStressMenu add command -label "log-squash-zero" \
+  -command {
+    set stressComponent log-squash-zero
+    .menuStressButton config -text "log-squash-zero"
+  }
+.menuStressButton.menuStressMenu add command -label "min-log-half-log-squash" \
+  -command {
+    set stressComponent min-log-half-log-squash
+    .menuStressButton config -text "min-log-half-log-squash"
+  }
+.menuStressButton.menuStressMenu add command -label "minus-zero" \
+  -command {
+    set stressComponent minus-zero
+    .menuStressButton config -text "minus-zero"
+  }
+.menuStressButton.menuStressMenu add command -label "minus-square-zero" \
+  -command {
+    set stressComponent minus-square-zero
+    .menuStressButton config -text "minus-square-zero"
+  }
+.menuStressButton.menuStressMenu add command -label "sign-square" \
+  -command {
+    set stressComponent sign-square
+    .menuStressButton config -text "sign-square"
+  }
+.menuStressButton.menuStressMenu add command -label "sign-square-half" \
+  -command {
+    set stressComponent sign-square-half
+    .menuStressButton config -text "sign-square-half"
+  }
+.menuStressButton.menuStressMenu add command -label "identity" \
+  -command {
+    set stressComponent identity
+    .menuStressButton config -text "identity"
+  }
+
+set comparison "nil"
+menubutton .menuComparisonButton -text "(none)" -menu .menuComparisonButton.menuComparisonMenu
+menu .menuComparisonButton.menuComparisonMenu
+.menuComparisonButton.menuComparisonMenu add command -label "(none)" \
+  -command {
+    set comparison "nil"
+    .menuComparisonButton config -text "(none)"
+  }
+.menuComparisonButton.menuComparisonMenu add command -label "<" \
+  -command {
+    set comparison "<"
+    .menuComparisonButton config -text "<"
+  }
+.menuComparisonButton.menuComparisonMenu add command -label "<*2" \
+  -command {
+    set comparison "<*2"
+    .menuComparisonButton config -text "<*2"
+  }
+.menuComparisonButton.menuComparisonMenu add command -label "<*4" \
+  -command {
+    set comparison "<*4"
+    .menuComparisonButton config -text "<*4"
+  }
+.menuComparisonButton.menuComparisonMenu add command -label "<+half" \
+  -command {
+    set comparison "<+half"
+    .menuComparisonButton config -text "<+half"
+  }
+.menuComparisonButton.menuComparisonMenu add command -label "<+1" \
+  -command {
+    set comparison "<+1"
+    .menuComparisonButton config -text "<+1"
+  }
+.menuComparisonButton.menuComparisonMenu add command -label "<+2" \
+  -command {
+    set comparison "<+2"
+    .menuComparisonButton config -text "<+2"
+  }
+.menuComparisonButton.menuComparisonMenu add command -label "<=" \
+  -command {
+    set comparison "<="
+    .menuComparisonButton config -text "<="
+  }
+
+
+
+###----------------------------------------------------------------------
+###                      PACKING BUTTONS
+###----------------------------------------------------------------------
+
+pack .hillclimb-button .batch-hillclimb-button .batch-hillclimb-stop-button \
+     .plus-button .times-button .coarse-button .dont-care-button \
+     .single-value-change-button \
+     .row-values-change-button .column-values-change-button .ortho-values-change-button \
+     .ten-percent-random-values-change-button \
+     .all-values-change-button \
+     .input-plot-spec-button \
+     .print-button .quit-button \
+     -in .left
+
+pack .menuAlgorithmButton -in .right.menu -side left 
+pack .menuStressButton -in .right.menu -side left 
+pack .menuComparisonButton -in .right.menu -side left 
+
+
+

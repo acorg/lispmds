@@ -1,0 +1,63 @@
+frame .buttons
+
+button .config-button -bitmap @bitmaps/graph.xbm -command \
+	[list ConfigureGraph [winfo name .] .g]
+
+proc ps_page {widget file} {
+  $widget postscript $file -pagewidth 6.5i -pageheight 9i -landscape true
+}
+
+button .print-button -bitmap @bitmaps/printer.xbm -command { 
+    ps_page .g [format "$graph_dir/%s.ps" $graphFile]
+}
+
+button .printButtonLatex -bitmap @bitmaps/printer.xbm -command { 
+    .g postscript [format "$graph_dir/%s.ps" $graphFile] -pagewidth 7.5i -landscape 0
+}
+
+button .printButton3 -bitmap @bitmaps/printer.xbm -command { 
+    .g postscript [format "$graph_dir/%s.ps" $graphFile] -pagewidth 6.5i -pageheight 6.5i
+}
+
+button .printButton4 -bitmap @bitmaps/printer.xbm -command { 
+    .g postscript [format "$graph_dir/%s.ps" $graphFile] -pagewidth 6.5i -pageheight 4.2i
+}
+#yeuh, the 4th is a hack to get things right for the parameters paper
+
+set ylog 0
+proc toggle_y_log {} {
+  global ylog
+  if {$ylog} { set ylog 0 } else {set ylog 1}
+  .g yaxis configure -logscale $ylog
+}
+button .log-y-button -bitmap @bitmaps/logy.xbm -command { 
+    toggle_y_log
+}
+
+set xlog 0
+proc toggle_x_log {} {
+  global xlog
+  if {$xlog} { set xlog 0 } else {set xlog 1}
+  .g xaxis configure -logscale $xlog
+}
+button .log-x-button -bitmap @bitmaps/logx.xbm -command { 
+    toggle_x_log
+}
+
+
+pack .buttons -side left -fill y
+
+raise .quit-button .buttons
+pack .log-y-button .log-x-button .config-button \
+     .print-button .printButtonLatex .printButton3 .printButton4 \
+     .quit-button \
+	-in .buttons \
+	-side top -padx 3 -pady 2 -fill x
+
+bind .g 1 {ps_page .g $graph_dir/xy1.ps}
+bind .g 2 {ps_page .g $graph_dir/xy2.ps}
+bind .g 3 {ps_page .g $graph_dir/xy3.ps}
+bind .g 4 {ps_page .g $graph_dir/xy4.ps}
+
+focus .g
+

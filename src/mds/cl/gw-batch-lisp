@@ -1,0 +1,5 @@
+#!/bin/bash
+
+# usagae gw-batch-lisp inputfile outputfile 
+
+/home/dsmith/cmucl/cmucl18d/bin/cmucl -eval "(progn (fi (eval (fi-in \"$1\")) \"$2\") (quit))"

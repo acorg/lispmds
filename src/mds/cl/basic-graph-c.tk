@@ -1,0 +1,50 @@
+proc to_c {arg} {
+  puts "$arg";flush stdout
+}
+
+#proc to_c {arg} {
+#	to_lisp [format "%s\n" $arg]
+#}
+
+
+frame .buttons -bg #f1e3cc
+
+button .config-button -text {Configure} -bg cornsilk -command [list ConfigureGraph [winfo name .] .g]
+
+button .print-button -text {Print to xy.ps} -bg cornsilk -command { 
+    .g postscript [format "$graph_dir/%s.ps" xy] -pagewidth 6.5i -pageheight 9i -landscape true
+}
+
+set ylog 0
+proc toggle_y_log {} {
+  global ylog
+  if {$ylog} { set ylog 0 } else {set ylog 1}
+  .g yaxis configure -logscale $ylog
+}
+button .log-y-button -text {Toggle Logarithmic Ordinate} -bg cornsilk -command { 
+    toggle_y_log
+}
+
+set xlog 0
+proc toggle_x_log {} {
+  global xlog
+  if {$xlog} { set xlog 0 } else {set xlog 1}
+  .g xaxis configure -logscale $xlog
+}
+button .log-x-button -text {Toggle Logarithmic Abcissa} -bg cornsilk -command { 
+    toggle_x_log
+}
+
+
+button .quit-button -text {quit} -bg cornsilk -command {
+    	catch "send GraphConfig after 1 exit" 
+	after 100 destroy .
+}
+
+pack .buttons -side left
+
+raise .quit-button .buttons
+pack .log-y-button .log-x-button .config-button .print-button .quit-button \
+	-in .buttons \
+	-side top -padx 3 -pady 2  -fill x -expand 1
+
