@@ -1,0 +1,74 @@
+#!/usr/bin/expect -f
+
+# Args are expected to be 1) file to source, 2) postscript file to create.
+
+set timeout 10
+
+# send_user [format "source = '%s'.\n" [lindex $argv 0]]
+# send_user [format "output = '%s'.\n" [lindex $argv 1]]
+
+spawn wish
+
+expect {
+    % {
+        send [format "source %s\n" [lindex $argv 0]]
+    } timeout {
+	    send_user "wish startup timed out.\n"
+	    exit 1
+    } eof {
+    	send_user "connection to wish failed.\n"
+	    exit 2
+    }
+}
+
+expect {
+    % {
+        send "update\n"
+    } timeout {
+	    send_user "wish startup timed out.\n"
+	    exit 1
+    } eof {
+    	send_user "connection to wish failed.\n"
+	    exit 2
+    }
+}
+
+expect {    
+    % {
+	    send [format ".c postscript -file %s\n" [lindex $argv 1]]
+    } timeout {
+	    send_user "connection to wish timed out.\n"
+	    exit 3
+    } eof {
+	    send_user "connection to wish failed.\n"
+	    exit 4
+    }
+}
+
+
+expect {    
+    % {
+	    # send_user [format "postscript file '%s' written.\n" [lindex $argv 1]]
+        send "exit\n"
+    } timeout {
+	    send_user "connection to wish timed out.\n"
+	    exit 5
+    } eof {
+	    send_user "connection to wish failed.\n"
+	    exit 6
+    }
+}
+
+expect {    
+    timeout {
+	    send_user "connection to wish timed out.\n"
+	    exit 7
+    } eof {
+	    # send_user "expected wish exit.\n"
+	    exit 0
+    }
+}
+
+exit 8
+
+

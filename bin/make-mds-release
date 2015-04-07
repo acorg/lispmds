@@ -1,0 +1,107 @@
+#!/bin/bash
+# -*- mode: shell-script; -*-
+
+if  [ $# = 1 ]
+then
+  name="$1"
+else
+  name="$(date +%Y-%m-%d)"
+fi
+
+if [ -z "$MDS_ROOT" ]
+then
+  echo "MDS_ROOT variable is not set." >&2
+  exit 1
+fi
+
+cd $MDS_ROOT/src/mds
+
+# Note that this doesn't cause you to exit if you have local mods.
+# cvs update || exit 1
+
+# Do everything in $MDS_ROOT/src/mds.
+# If there's ever anything that does not happen from here, use a full path.
+cd $MDS_ROOT/src/mds || exit 1
+
+# Where we're putting the dist.
+dest=mds/release/$name/mds
+
+# Make sure this release doesn't already exist. Or maybe you want to remove & overwrite?
+if [ -d "$dest" ]
+then
+  echo "Release destination directory '$MDS_ROOT/src/mds/$dest' already exists." >&2
+  exit 1
+fi
+
+mkdir -p $dest/{cl,bitmaps,mds}
+
+# clinit.cl goes in top level for ease for windows people, and also one level down for ease for mac users (who have a .clinit.cl)
+cp -a mds/clinit.cl $dest/clinit.cl
+cp -a mds/clinit.cl $dest/mds/clinit.cl
+
+cp -a mds/release/INSTALLATION-NOTES.txt $dest
+cp -a mds/release/linux.bashrc.additions $dest
+cp -a mds/release/mac.bashrc.additions $dest
+cp -a mds/release/mac.bashrc.developer-template $dest
+cp -a cl/*.{lisp,tk,system} $dest/cl/
+cp -a cl/gw-batch-lisp $dest/cl/
+cp -a bitmaps/* $dest/bitmaps/
+cp -a mds/*.{lisp,tk,system,js,html} $dest/mds/
+
+# gridware lisp dim anneal
+mkdir -p $dest/mds/alan-dim-anneal/tmp-files
+cp -a mds/alan-dim-anneal/dim-anneal.lisp $dest/mds/alan-dim-anneal/
+cp -a mds/alan-dim-anneal/cmucl-dim-anneal-two-phase $dest/mds/alan-dim-anneal/
+cp -a mds/alan-dim-anneal/acl-dim-anneal-two-phase $dest/mds/alan-dim-anneal/
+cp -a mds/alan-dim-anneal/acl-dim-anneal-two-phase $dest/mds/alan-dim-anneal/tmp-files/a-file-so-this-dir-is-not-empty
+
+# procrustes
+# the procrustes c code is compiled for unix in dir mds/procrustes with   cc -lm -o Procrustes3-for-lisp -O Procrustes3-for-lisp.c
+# there are separate compiles for mac ppc and mac intel (should be able to do universal compile, but a simple compile on intel does not do it)
+mkdir -p $dest/mds/procrustes/{Debug,tmp-files}
+cp mds/procrustes/Procrustes3-for-lisp.c $dest/mds/procrustes
+cp -a mds/procrustes/Procrustes3-for-lisp-mac-ppc $dest/mds/procrustes
+cp -a mds/procrustes/Procrustes3-for-lisp-i386-Darwin $dest/mds/procrustes
+cp -a mds/procrustes/Procrustes3-for-lisp-i686-Linux $dest/mds/procrustes
+cp -a mds/procrustes/Debug/Procrustes3-for-lisp.exe $dest/mds/procrustes/Debug
+
+# procrustes kmeans
+# the procrustes-kmeans c code is compiled for unix in dir mds/procrustes-kmeans with   
+# cc -O -o Procrustes-Kmeans-for-lisp Procrustes-Kmeans-for-lisp.c
+# there are separate compiles for mac ppc and mac intel (should be able to do universal compile, but a simple compile on intel does not do it)
+mkdir -p $dest/mds/procrustes-kmeans/{Debug,tmp-files}
+cp mds/procrustes-kmeans/Procrustes-Kmeans-for-lisp.c $dest/mds/procrustes-kmeans
+cp -a mds/procrustes-kmeans/Procrustes-Kmeans-for-lisp-mac-ppc $dest/mds/procrustes-kmeans
+cp -a mds/procrustes-kmeans/Procrustes-Kmeans-for-lisp-i386-Darwin $dest/mds/procrustes-kmeans
+cp -a mds/procrustes-kmeans/Procrustes-Kmeans-for-lisp-i686-Linux $dest/mds/procrustes-kmeans
+# cp -a mds/procrustes-kmeans/Debug/Procrustes-Kmeans-for-lisp.exe $dest/mds/procrustes-kmeans/Debug
+
+# pymol
+mkdir -p $dest/pymol/{lib,map-viewer-plugin}
+cp -a pymol/map-viewer-plugin/{README,map-viewer.py} $dest/pymol/map-viewer-plugin
+cp -a pymol/lib/{ACmap,Axes,BaseGrid,BoundingBox,CGO,Coord,Gnuplot,MdsPymol,Options,Utils,TiterPlane,MdsError}.py $dest/pymol/lib/.
+
+# isolation dates
+mkdir -p $dest/mds/data/isolation-dates
+cp -a mds/data/isolation-dates/RIVM-annotated.txt $dest/mds/data/isolation-dates/
+
+# batch scratch file
+mkdir -p $dest/cl/batch-scratch
+
+# set perms in $dest
+find $dest -type f -print0 | xargs -0 chmod a+r
+find $dest -type d -print0 | xargs -0 chmod a+rx
+chmod 777 $dest/mds/procrustes/tmp-files $dest/cl/batch-scratch
+find $dest -name '*.exe' -print0 | xargs -0 chmod 755
+chmod 755 $dest/mds/procrustes/Procrustes3-for-lisp-i386-Darwin \
+          $dest/mds/procrustes/Procrustes3-for-lisp-i686-Linux \
+          $dest/mds/procrustes/Procrustes3-for-lisp-mac-ppc \
+          $dest/mds/procrustes-kmeans/Procrustes-Kmeans-for-lisp-i386-Darwin \
+          $dest/mds/procrustes-kmeans/Procrustes-Kmeans-for-lisp-i686-Linux \
+          $dest/mds/procrustes-kmeans/Procrustes-Kmeans-for-lisp-mac-ppc
+
+# finish up
+cd $dest/..
+zip -r mds mds && rm -rf mds
+
+echo "Dist placed in `/bin/pwd`/mds.zip" >&2

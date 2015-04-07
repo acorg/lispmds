@@ -1,0 +1,19 @@
+#!/bin/sh
+
+case $# in
+	0) echo "usage: `basename $0` other-dir files" >&2; exit 1;;
+esac
+
+dir="$1"
+shift
+
+for i in "$@"
+do
+  if [ -f "$dir/$i" ]
+  then
+	  echo "----------[ diff $i $dir/$i ]----------"
+	  diff -b -I '^;; Created from file ' --suppress-common-lines "$i" "$dir/$i"
+  else
+	  echo "No file to compare $i with." >&2
+  fi
+done
