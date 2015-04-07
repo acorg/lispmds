@@ -1,0 +1,46 @@
+(in-package mk)
+
+;;******************************************************************************************
+;;    LINK: if this file is edited, also edit defsystem.lisp and defsystem-lispworks.lisp
+;;******************************************************************************************
+
+(defsystem :utils
+    :source-pathname "/home/dsmith/mds/src/mds/cl/"
+    :components ((:module macros
+			  :source-pathname ""
+			  :components ((:file "macros")))
+		 (:module rest
+			  :source-pathname ""
+			  :components ((:file "map")
+				       (:file "knuth-random-single")
+				       (:file "macros")
+				       (:file "applies-for-lispworks")
+				       (:file "map")
+				       (:file "knuth-random-single")
+				       (:file "knuth-random-multiple")
+				       (:file "knuth-random")
+				       (:file "misc")
+				       (:file "batch")
+				       (:file "intersection")
+				       (:file "new-intersection")
+				       (:file "tk-misc")
+				       (:file "gaussian-noise")
+				       ;;(:file "tk-interface")
+				       ;;(:file "process-interface")
+				       ;;(:file "g-plot")
+				       ;;(:file "gnuplot")
+				       (:file "scatter")
+				       (:file "statistics")
+				       (:file "chi-squared")
+				       (:file "bootstrap")
+				       (:file "hillclimb")
+				       (:file "conjugant-gradient-numerical-recipies-macros")
+				       (:file "conjugant-gradient-numerical-recipies")
+				       (:file "conjugant-gradient")
+				       (:file "matrix-defpackage")
+				       (:file "matrix")
+                                       (:file "genetics")
+				       (:file "newick-tree-format"))
+			  :depends-on (macros))))
+
+

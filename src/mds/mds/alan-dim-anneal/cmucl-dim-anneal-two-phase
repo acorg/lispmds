@@ -1,0 +1,12 @@
+#!/bin/bash
+
+# usagae cmucl-dim-anneal-two-phase inputfile outputfile input-num-dims output-num-dims and optional num-runs
+
+if [ -n "$5" ]; then
+  /home/dsmith/cmucl/cmucl18d/bin/cmucl -eval "(progn (fi (lisp-dim-anneal-two-phase-from-save (fi-in \"$1\") :dim-anneal-starting-dimension $3 :dim-anneal-ending-dimension $4 :num-runs $5) \"$2\") (quit))"
+else
+  /home/dsmith/cmucl/cmucl18d/bin/cmucl -eval "(progn (fi (lisp-dim-anneal-two-phase-from-save (fi-in \"$1\") :dim-anneal-starting-dimension $3 :dim-anneal-ending-dimension $4) \"$2\") (quit))"
+fi
+
+
+

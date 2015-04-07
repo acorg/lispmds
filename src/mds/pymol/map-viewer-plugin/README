@@ -1,0 +1,67 @@
+NOTE: It is no longer necessary to install map-viewer.py as a plugin in
+Pymol. You may still choose to do this to access its functionality from the
+Plugin menu. The preferred method for using this code is via the lisp
+interface. If you are planning on using the lisp interface, the following
+instructions are irrelevant to you.
+
+
+INSTALLATION
+------------
+
+WINDOWS:
+
+  Start Pymol and choose Plugin / Install Plugin. Then select the
+  map-viewer.py file.
+
+  After that you should see 'Antigenic map' and 'Antibody Landscape' in
+  your Plugin menu. If you select 'Antigenic map', it will ask you to
+  select a single map file to display. You then choose a .pml data file
+  (created by lisp) and it should display. If you select 'Antibody
+  Landscape', you will be asked repeatedly to select files for display.
+  When you hit Cancel on a file selector, the previously selected files
+  will all be displayed. Note that there is currently no way to select an
+  options file (though this could be added easily). To do that, use the
+  lisp interface instead.
+
+MAC OS X (Aqua/X11 hybrid version of pymol):
+
+  Follow the instructions for installation & use under Windows.
+
+MAC OS X (Aqua version of pymol):
+
+  On the Mac aqua version of Pymol, plugins are not supported. You need to
+  type two commands to view a map. Once you have pymol running, type the
+  following in the little console window, hitting return after each line
+
+    run /path/to/your/map-viewer.py
+    abl optionsFile=None, /path/to/your/saved/file.pml
+
+  and the map should come up. You can then use abl repeatedly to display
+  othe maps. I.e., the 'run' command, which loads map-viewer.py and
+  provides the abl command, only needs to be entered once per pymol
+  session.
+
+INVOKING PROGRAMMATICALLY (e.g., from lisp)
+
+  Run pymol from the command line, and use two -d arguments: one to run the
+  map-viewer.py file (which just creates the new abl command), and the
+  second to call abl on your map file(s). So on a mac you'd do something
+  like
+
+    /Applications/MacPyMOL.app/Contents/MacOS/PyMOL \
+      -d 'run /Users/terry/mds/src/mds/pymol/map-viewer-plugin/map-viewer.py' \
+      -d 'abl optionsFile=None, /Users/terry/mds/src/mds/pymol/map-viewer-plugin/ron-files/human-3d-2d.pml'
+
+  And on windows you'd probably be invoking
+
+    C:\Program Files\DeLano Scientific\PyMOL\PyMOL.exe
+
+  with similar -d arguments. Note that you can specify an options file if
+  you choose.
+
+
+COMPATIBILITY:
+
+  The map viewer Pymol plugin expects to be given files in a certain python
+  form (which it execs). Although these files can be written by hand, it is
+  simplest to produce them (and load them into pymol) using lisp.

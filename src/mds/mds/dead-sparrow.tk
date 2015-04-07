@@ -1,0 +1,17 @@
+###----------------------------------------------------------------------
+###                           WINDOWS
+###----------------------------------------------------------------------
+
+wm min . 0 0
+# wm geometry . +10+140
+wm geometry . -200-60    ;# from ron 17aug2005, good for windows
+wm title . "DS"
+
+# button .sparrow -text "ds" -command { 
+button .sparrow  -bitmap @$bitmapDir/dead-sparrow.xbm -command { 
+	tolisp "(send-null-string-to-open-streams)"
+}
+
+pack .sparrow 
+
+

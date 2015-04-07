@@ -1,0 +1,20 @@
+canvas .c
+.c configure -width 550 -height 350
+pack .c -side right -fill both -expand 1
+
+
+wm min . 0 0
+wm geometry . -10+10
+
+
+button .print-button -bitmap @~dsmith/im/bitmaps/printer.bm -bg cornsilk -command { 
+    .c postscript "~/xy.ps" -pagewidth 6.5i -pageheight 9i -landscape true
+}
+
+pack .print-button
+
+button .quit-button -bitmap @~dsmith/im/bitmaps/quit.bm -bg cornsilk -command { 
+	after 100 destroy .
+}
+
+pack .quit-button

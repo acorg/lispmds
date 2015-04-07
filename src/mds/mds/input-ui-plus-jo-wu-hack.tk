@@ -1,0 +1,84 @@
+
+###----------------------------------------------------------------------
+###                           WINDOWS
+###----------------------------------------------------------------------
+
+wm min . 0 0
+wm geometry . +10+10   ;#how do we get center?
+wm title . "Input UI"
+
+###----------------------------------------------------------------------
+###                     INPUT FROM A FILE
+###----------------------------------------------------------------------
+
+set initialDir "mds/data/"
+set initialFile ""   ;# unfortunately not accepted by tk_getOpenFile (why?)
+
+proc readFile {autoConvert numDims panel} {
+  ;# unfortunately -parent does not seem to work so the window is created in the middle
+  ;# of the screen.  and -initialFile does not apply for getOpenFile.  
+  global initialDir initialFile lisp_tk_stream_number
+  set types {
+    {"All files"		*}
+    {"Text files"		{.txt}}	
+    }
+  set file [tk_getOpenFile -filetypes $types -initialdir $initialDir]
+
+  if {![string match $file ""]} {
+#   toLisp "(display-error-and-continue (read-hi-table-into-tk-interface \"$file\" $autoConvert $numDims $panel))"
+#    toLisp "(read-hi-table-into-tk-interface \"$file\" $autoConvert $numDims $panel)"
+     toLisp "(tk-error-guard $lisp_tk_stream_number (read-hi-table-into-tk-interface \"$file\" $autoConvert $numDims $panel))"
+      
+      
+    set fileComponents [split $file /] ;# will this work under MSwindows?
+    set initialFile [lindex $fileComponents [expr [llength $fileComponents]-1]]
+    set initialDir [string range $file 0 [expr [string length $file]-[string length $initialFile]-1]]
+  }
+}
+
+###----------------------------------------------------------------------
+###                        BUTTONS
+###----------------------------------------------------------------------
+
+frame .num-dims
+entry .num-dims-entry -width 2 -justify right
+.num-dims-entry insert 0 2
+label .num-dims-label -text "Number of dimensions:" -anchor w
+pack .num-dims-label -in .num-dims -side left -fill x
+pack .num-dims-entry -in .num-dims -side right -fill x
+pack .num-dims -side top -fill x
+#.num-dims-entry get
+
+frame .convert
+set convert 1
+checkbutton .convert-button -variable convert
+#label .convert-label -text "Convert to distance matrix?" -anchor w
+label .convert-label -text "Auto identify table type?:" -anchor w
+pack .convert-label -in .convert -side left -fill x
+pack .convert-button -in .convert -side right -fill x
+pack .convert -side top -pady 2 -fill x
+
+frame .panel
+set panel 0
+label .panel-label -text "If HI table:" -anchor w
+radiobutton .panel-button -text panel -variable panel -value 1
+radiobutton .raw-button -text raw -variable panel -value 0
+pack .panel-label -in .panel -side left
+pack .panel-button -in .panel -side right -fill x
+pack .raw-button -in .panel -side right -fill x
+pack .panel -side top -pady 2 -fill x
+
+button .open-button -text "Open" -command {
+  readFile $convert [.num-dims-entry get] $panel
+}
+
+button .dismiss-button -text "Dismiss" -command { 
+	tolisp "(tk-close (get-input-ui-tk))"
+}
+
+frame .buttons
+pack .buttons -side bottom -fill x -expand 1
+pack .open-button -in .buttons -side left -fill x -expand 1
+pack .dismiss-button -in .buttons -side right
+raise .open-button
+raise .dismiss-button

@@ -1,0 +1,2483 @@
+###----------------------------------------------------------------------
+###                            MISC
+###----------------------------------------------------------------------
+
+#for Ron and for I respectively
+#set bitmapDir c:/mds/bitmaps
+#set bitmapDir bitmaps
+#the above is now set from lisp
+
+# the lisp needs to know the size of the window.  but i don't know how to pick
+# up when the window is resized with the X window manager, so many commands now
+# send:   tolisp "(set-canvas-size-info $lisp_tk_stream_number '[wm geometry .])"
+# this is ugly (because i do it in many places that are not about window size changing,
+# and if i knew how to pick up a window size change, i would not have to do this everywhere.)
+
+
+###----------------------------------------------------------------------
+###                           WINDOWS
+###----------------------------------------------------------------------
+
+wm min . 0 0
+
+#wm geometry . 578x350-10+10
+#wm geometry . 578x450-10+10   ;# to put in top right corner
+wm geometry . 578x450-0+0   ;# to put in top right corner without any offset
+#wm geometry . 578x450-700+1200  ;# to put off screen for batch runs 
+
+#wm title . "Optimizer"
+
+canvas .c
+#.c configure -width 550 -height 350
+.c configure -width 50 -height 50     ;# pack with expand and fill, and set the geometry above, 
+#.c configure -width 1000 -height 650 ;#   that way we do not loose the buttons when we shrink
+#.c configure -width 350 -height 350
+#.c configure -width 450 -height 350
+#.c configure -width 250 -height 250
+#.c configure -bg gray85
+.c configure -bg white
+#pack .c -side right -fill both -expand 1
+
+
+
+
+frame .left
+frame .left.left
+frame .left.right
+frame .right
+
+# pack .left -side left -fill y
+# pack .right -side right -fill y
+# pack .left.left -side left -in .left -fill y
+# pack .left.right -side right -in .left -fill y
+
+pack .left -side left -fill y
+pack .left.left -side left -in .left -fill y
+pack .left.right -side left -in .left -fill y
+pack .right -side right -fill both -expand 1
+
+frame .right.c-and-yscroll
+.c configure -width 10 -height 10 -scrollregion "0 0 2000 2000" -xscrollcommand ".xscroll set" -yscrollcommand ".yscroll set"
+scrollbar .xscroll -command ".c xview" -orient horizontal
+scrollbar .yscroll -command ".c yview"
+
+pack .right.c-and-yscroll -in .right -side top -fill both -expand yes
+pack .xscroll -in .right -fill x
+pack .c -in .right.c-and-yscroll -fill both -expand yes -side left
+pack .yscroll -in .right.c-and-yscroll -fill y -side right
+
+
+
+button .print-button -bitmap @$bitmapDir/printer.xbm -command { 
+    set filename [getSaveFilenameWithType "Enter filename in which to save this image (as postscript on windows, gif on unix)" {{"All files" *}}]
+    if {!($filename == "")} {
+        set filename $filename.ps
+	.c postscript -file $filename
+	tolisp "(if (not (running-on-windows-p)) (tk-image-convert-ps-to-png \"$filename\"))"
+	tolisp "(if (not (running-on-windows-p)) (tk-image-convert-ps-to-pdf \"$filename\"))"
+    }
+}
+
+button .quit-button -bitmap @$bitmapDir/quit.xbm -command { 
+	tolisp "'eof"
+}
+
+focus .c
+
+
+###----------------------------------------------------------------------
+###                           CREATION  
+###----------------------------------------------------------------------
+
+proc lastItemNumber {canvas} {
+  set item [$canvas create line 20 20 100 100]
+  toLisp "(print (dec $item))"
+  return $item
+}
+
+proc mkCircle {canvas x y radius} {
+  set item [$canvas create oval \
+             [expr $x-$radius] [expr $y-$radius] [expr $x+$radius] [expr $y+$radius] ]
+  $canvas addtag point withtag $item
+  return $item
+}
+
+proc mkCircleColor {canvas outlineColor fillColor x y radius} {
+  global itemColor
+  set item [$canvas create oval \
+             [expr $x-$radius] [expr $y-$radius] [expr $x+$radius] [expr $y+$radius] \
+             -outline $outlineColor -fill $fillColor]
+  $canvas addtag point withtag $item
+  set itemColor($item) $fillColor
+  return $item
+}
+
+proc mkRectangleColor {canvas outlineColor fillColor x y radius} {
+  global itemColor
+  set item [$canvas create rectangle \
+             [expr $x-$radius] [expr $y-$radius] [expr $x+$radius] [expr $y+$radius] \
+             -outline $outlineColor -fill $fillColor]
+  $canvas addtag point withtag $item
+  set itemColor($item) $fillColor
+  return $item
+}
+
+proc mkTriangleColor {canvas outlineColor fillColor x y radius} {
+  global itemColor
+  set item [$canvas create polygon \
+             [expr $x-$radius] [expr $y+$radius] [expr $x+$radius] [expr $y+$radius] [expr $x] [expr $y-$radius] [expr $x-$radius] [expr $y+$radius] \
+             -outline $outlineColor -fill $fillColor]
+  $canvas addtag point withtag $item
+  set itemColor($item) $fillColor
+  return $item
+}
+
+proc mkDownTriangleColor {canvas outlineColor fillColor x y radius} {
+  global itemColor
+  set item [$canvas create polygon \
+             [expr $x-$radius] [expr $y-$radius] [expr $x+$radius] [expr $y-$radius] [expr $x] [expr $y+$radius] [expr $x-$radius] [expr $y-$radius] \
+             -outline $outlineColor -fill $fillColor]
+  $canvas addtag point withtag $item
+  set itemColor($item) $fillColor
+  return $item
+}
+
+proc mkPolygonColor {canvas outlineColor fillColor coordList} {
+  global itemColor
+   set item [$canvas create polygon \
+             $coordList \
+             -outline $outlineColor -fill $fillColor]
+  $canvas addtag point withtag $item
+  set itemColor($item) $fillColor
+  return $item
+}
+
+proc mkCross {canvas x y radius width} {
+  set item [$canvas create line \
+             [expr $x-$radius] [expr $y-$radius] [expr $x+$radius] [expr $y+$radius] -width $width]
+  set item [$canvas create line \
+             [expr $x+$radius] [expr $y-$radius] [expr $x-$radius] [expr $y+$radius] -width $width ]
+  return $item
+}
+
+proc mkSelectionRectangle {canvas x y radius outlineColor} {
+  set item [$canvas create rectangle \
+             [expr $x-$radius] [expr $y-$radius] [expr $x+$radius] [expr $y+$radius] \
+             -outline $outlineColor]
+  $canvas addtag selectionRectangle withtag $item
+  return $item
+}
+
+proc mkLine {x1 y1 x2 y2 tag} {
+  return [.c create line \
+           $x1 $y1 $x2 $y2 -tag $tag]
+}
+
+proc mkColoredLine {x1 y1 x2 y2 tag color} {
+  return [.c lower [.c create line \
+           $x1 $y1 $x2 $y2 -tag $tag -fill $color]]
+}
+
+proc mkColorWidthTopLine {x1 y1 x2 y2 tag color width} {
+  return [.c create line $x1 $y1 $x2 $y2 -tag $tag -fill $color -width $width]
+}
+
+proc mkColoredWidthedLine {x1 y1 x2 y2 tag color width} {
+  return [.c lower [.c create line \
+           $x1 $y1 $x2 $y2 -tag $tag -fill $color -width $width]]
+}
+
+# do the lower so the dot can be easil selected (is not burried by the error lines)
+proc mkErrorLine {x1 y1 x2 y2 color} {
+#  .c lower [mkColoredLine $x1 $y1 $x2 $y2 error $color]
+  .c create line $x1 $y1 $x2 $y2 -tag drror -fill $color
+}
+
+proc mkColoredArrow {x1 y1 x2 y2 tag color} {
+  return [.c create line $x1 $y1 $x2 $y2 -tag $tag -fill $color -arrow last]
+}
+
+proc mkColoredWidthArrow {x1 y1 x2 y2 tag color width} {
+  return [.c create line $x1 $y1 $x2 $y2 -tag $tag -fill $color -width $width -arrow last]
+}
+
+proc setIdXYXY {id x1 y1 x2 y2} {
+  .c coords $id $x1 $y1 $x2 $y2
+}
+
+proc setIdXYs {id xys} {
+  .c coords $id $xys
+}
+
+proc setIdXYXYFill {id x1 y1 x2 y2 color} {
+  .c coords $id $x1 $y1 $x2 $y2
+  .c itemconf $id -fill $color
+}
+
+proc setIdFill {id color} {
+  global itemColor
+  .c itemconf $id -fill $color
+  set itemColor($id) $color
+}
+
+proc mvIdXY {id dx dy} {
+  .c move $id $dx $dy
+}
+
+proc setIdXYR {id x y radius} {
+  .c coords $id [expr $x-$radius] [expr $y-$radius] [expr $x+$radius] [expr $y+$radius]   ;# does not work for triangles
+}
+
+proc setIdXYR_NoRGiven {id x y} {
+  set coords [.c coords $id]
+  set radius [expr ([lindex $coords 0]-[lindex $coords 2])/2]
+  .c coords $id [expr $x-$radius] [expr $y-$radius] [expr $x+$radius] [expr $y+$radius]
+}
+
+proc mkText {text x y tag anchor color font} {
+  global itemColor
+  set item [.c create text $x $y -text $text -anchor $anchor -tag $tag -fill $color -font $font]
+  set itemColor($item) $color
+  return $item
+}
+
+proc setTextXY {id x y} {
+  .c coords $id $x $y
+}
+
+proc setTextText {id text} {
+  .c itemconf $id -text $text
+}
+
+
+###----------------------------------------------------------------------
+###                        MAJOR MODES
+###----------------------------------------------------------------------
+
+proc setModeButtonBackground {mode color} {
+    if {($mode=="selecting")} {
+	.selecting-mode-button configure -background $color
+    } else {
+	if {($mode=="freezing")} {
+	    .freezing-mode-button configure -background $color
+	} else {
+	    if {($mode=="disconnecting")} {
+		.disconnecting-mode-button configure -background $color
+	    } else {
+		if {($mode=="adjusting")} {
+		    .adjusting-mode-button configure -background $color
+		} else {
+		    if {($mode=="zooming")} {
+			.zooming-mode-button configure -background $color
+		    } else {
+			if {($mode=="translating")} {
+			    .translating-mode-button configure -background $color
+			} else {
+			    if {($mode=="rotating")} {
+				.rotating-mode-button configure -background $color
+			    } else {
+				if {($mode=="nameing")} {
+				    .nameing-mode-button configure -background $color
+				}
+			    }
+			}
+		    }
+		}
+	    }
+	}
+    }
+}
+
+
+set mode selecting
+
+button .selecting-mode-button -bitmap @$bitmapDir/select.xbm -background green -activebackground green -command {
+    setModeButtonBackground $mode #dddddd
+    set mode selecting
+    setModeButtonBackground $mode green
+}
+button .zooming-mode-button -bitmap @$bitmapDir/zoom.xbm -background #dddddd -activebackground green -command {
+    setModeButtonBackground $mode #dddddd
+    set mode zooming
+    setModeButtonBackground $mode green
+}
+button .translating-mode-button -bitmap @$bitmapDir/translate.xbm -background #dddddd -activebackground green -command {
+    setModeButtonBackground $mode #dddddd
+    set mode translating
+    setModeButtonBackground $mode green
+}
+button .rotating-mode-button -bitmap @$bitmapDir/rotate.xbm -background #dddddd -activebackground green -command {
+    setModeButtonBackground $mode #dddddd
+    set mode rotating
+    setModeButtonBackground $mode green
+}
+button .adjusting-mode-button -bitmap @$bitmapDir/adjust.xbm -background #dddddd -activebackground green -command {
+    setModeButtonBackground $mode #dddddd
+    set mode adjusting
+    setModeButtonBackground $mode green
+}
+button .freezing-mode-button -bitmap @$bitmapDir/freeze.xbm -background #dddddd -activebackground green -command {
+    setModeButtonBackground $mode #dddddd
+    set mode freezing
+    setModeButtonBackground $mode green
+}
+button .disconnecting-mode-button -bitmap @$bitmapDir/disconnect.xbm -background #dddddd -activebackground green -command {
+    setModeButtonBackground $mode #dddddd
+    set mode disconnecting
+    setModeButtonBackground $mode green
+}
+button .nameing-mode-button -bitmap @$bitmapDir/name.xbm -background #dddddd -activebackground green -command {
+    setModeButtonBackground $mode #dddddd
+    set mode nameing
+    setModeButtonBackground $mode green
+}
+button .moving-mode-button -bitmap @$bitmapDir/m-b-moves.xbm -background #dddddd -activebackground green -command {
+    setModeButtonBackground $mode #dddddd
+    set mode moving
+    setModeButtonBackground $mode green
+}
+
+##------------------------  events  -----------------------------
+
+bind .c <Button-1> {
+    if {($mode=="selecting")} {
+	button-1-selecting %x %y
+    } else {
+	if {($mode=="freezing")} {
+	    button-1-freezing
+	} else {
+	    if {($mode=="disconnecting")} {
+		button-1-disconnecting
+	    } else {
+		if {($mode=="adjusting")} {
+		    button-1-adjusting
+		} else {
+		    if {($mode=="zooming")} {
+			button-1-zooming %x %y
+		    } else {
+			if {($mode=="translating")} {
+			    button-1-translating %x %y
+			} else {
+			    if {($mode=="rotating")} {
+				button-1-rotating %x %y
+			    } else {
+				if {($mode=="nameing")} {
+				    button-1-nameing
+				}
+			    }
+			}
+		    }
+		}
+	    }
+	}
+    }
+}
+
+bind .c <Shift-Button-1> {
+    if {($mode=="selecting")} {
+	shift-button-1-selecting %x %y
+    } else {
+	if {($mode=="adjusting")} {
+	    shift-button-1-adjusting
+	} else {
+	    if {($mode=="zooming")} {
+		shift-button-1-zooming %x %y
+	    } else {
+		if {($mode=="translating")} {         ;# w/o this we get the buttonrelease without setting up properly as button-release does not
+ 		   button-1-translating %x %y        ;# see the shift.  with this else, shift-button-1 in translate mode is the same as b1
+  	        } else {
+		    if {($mode=="rotating")} {
+			shift-button-1-rotating %x %y
+		    }
+		}
+	    }
+	}
+    }
+}
+
+bind .c <Control-Button-1> {
+    if {($mode=="zooming")} {
+      control-button-1-zooming %x %y
+    }
+}
+
+bind .c <Control-Button-3> {
+    if {($mode=="zooming")} {
+      control-button-3-zooming %x %y
+    }
+}
+
+
+
+bind .c <B1-Motion> {
+    if {($mode=="selecting")} {
+	button-1-motion-selecting %x %y
+    } else {
+	if {($mode=="translating")} {
+	    button-1-motion-translating %x %y
+	}
+    }
+}
+
+bind .c <B1-ButtonRelease> {
+    if {($mode=="selecting")} {
+	button-1-release-selecting %x %y 
+    } else {
+	if {($mode=="translating")} {
+	    button-1-release-translating %x %y
+	}
+    }
+}
+
+bind .c <Control-a> {
+    if {($mode=="selecting")} {
+	control-a-selecting
+    }
+}
+
+bind .c <Control-I> {    ;# note captial I here, not control-shift-i which is what i would have expected would have been equivalent
+    if {($mode=="selecting")} {
+	control-shift-i-selecting
+    }
+}
+
+bind .c <Control-A> {
+    if {($mode=="selecting")} {
+	control-shift-a-selecting
+    }
+}
+
+bind .c <Control-S> {
+    if {($mode=="selecting")} {
+	control-shift-s-selecting
+    }
+}
+
+bind .c <Button-3> {
+    if {($mode=="selecting")} {
+	button-3-selecting %x %y
+    } else {
+	if {($mode=="freezing")} {
+	    button-3-freezing
+	} else {
+	    if {($mode=="disconnecting")} {
+		button-3-disconnecting
+	    } else {
+		if {($mode=="adjusting")} {
+		    button-3-adjusting
+		} else {
+		    if {($mode=="zooming")} {
+			button-3-zooming %x %y
+		    } else {
+			if {($mode=="translating")} {
+			    ;# button-3-translating %x %y
+			} else {
+			    if {($mode=="rotating")} {
+				button-3-rotating %x %y
+			    } else {
+				if {($mode=="nameing")} {
+				    button-3-nameing
+				}
+			    }
+			}
+		    }
+		}
+	    }
+	}
+    }
+}
+
+
+bind .c <Shift-Button-3> {
+    if {($mode=="adjusting")} {
+	shift-button-3-adjusting
+    } else {
+	if {($mode=="zooming")} {
+	    shift-button-3-zooming %x %y
+	} else {
+	    if {($mode=="rotating")} {
+		shift-button-3-rotating %x %y
+	    }
+	}
+    }
+}
+
+
+#----- button 2 always selects
+
+bind .c <Button-2> {
+    if {($mode=="selecting")} {
+	button-1-selecting %x %y
+    } else {
+	if {($mode=="freezing")} {
+	    button-1-selecting %x %y
+	} else {
+	    if {($mode=="disconnecting")} {
+  	      button-1-selecting %x %y
+	    } else {
+		if {($mode=="adjusting")} {
+		   button-1-selecting %x %y
+		} else {
+		    if {($mode=="zooming")} {
+			button-1-selecting %x %y
+		    } else {
+			if {($mode=="translating")} {
+			    button-1-selecting %x %y
+			} else {
+			    if {($mode=="rotating")} {
+				button-1-selecting %x %y
+			    } else {
+				if {($mode=="nameing")} {
+				    button-1-selecting %x %y
+				}
+			    }
+			}
+		    }
+		}
+	    }
+	}
+    }
+}
+
+bind .c <B2-Motion> {
+    if {($mode=="selecting")} {
+	button-1-motion-selecting %x %y
+    } else {
+	if {($mode=="freezing")} {
+	    button-1-motion-selecting %x %y
+	} else {
+	    if {($mode=="disconnecting")} {
+  	      button-1-motion-selecting %x %y
+	    } else {
+		if {($mode=="adjusting")} {
+		   button-1-motion-selecting %x %y
+		} else {
+		    if {($mode=="zooming")} {
+			button-1-motion-selecting %x %y
+		    } else {
+			if {($mode=="translating")} {
+			    button-1-motion-selecting %x %y
+			} else {
+			    if {($mode=="rotating")} {
+				button-1-motion-selecting %x %y
+			    } else {
+				if {($mode=="nameing")} {
+				    button-1-motion-selecting %x %y
+				}
+			    }
+			}
+		    }
+		}
+	    }
+	}
+    }
+}
+
+
+bind .c <B2-ButtonRelease> {
+    if {($mode=="selecting")} {
+	button-1-release-selecting %x %y 
+    } else {
+	if {($mode=="freezing")} {
+	    button-1-release-selecting %x %y
+	} else {
+	    if {($mode=="disconnecting")} {
+  	      button-1-release-selecting %x %y
+	    } else {
+		if {($mode=="adjusting")} {
+		   button-1-release-selecting %x %y
+		} else {
+		    if {($mode=="zooming")} {
+			button-1-release-selecting %x %y
+		    } else {
+			if {($mode=="translating")} {
+			    button-1-release-selecting %x %y
+			} else {
+			    if {($mode=="rotating")} {
+				button-1-release-selecting %x %y
+			    } else {
+				if {($mode=="nameing")} {
+				    button-1-release-selecting %x %y
+				}
+			    }
+			}
+		    }
+		}
+	    }
+	}
+    }
+}
+
+
+bind .c <Shift-Button-2> {
+    if {($mode=="selecting")} {
+	shift-button-1-selecting %x %y 
+    } else {
+	if {($mode=="freezing")} {
+	    shift-button-1-selecting %x %y
+	} else {
+	    if {($mode=="disconnecting")} {
+  	      shift-button-1-selecting %x %y
+	    } else {
+		if {($mode=="adjusting")} {
+		   shift-button-1-selecting %x %y
+		} else {
+		    if {($mode=="zooming")} {
+			shift-button-1-selecting %x %y
+		    } else {
+			if {($mode=="translating")} {
+			    shift-button-1-selecting %x %y
+			} else {
+			    if {($mode=="rotating")} {
+				shift-button-1-selecting %x %y
+			    } else {
+				if {($mode=="nameing")} {
+				    shift-button-1-selecting %x %y
+				}
+			    }
+			}
+		    }
+		}
+	    }
+	}
+    }
+}
+
+
+
+
+
+###------------------------- minor modes ---------------------------------
+
+# these are not used (i removed their use in translating, but could be used)
+#.c bind point <Button-1> {
+#    set pointButton1 1
+#}
+#
+#.c bind point <B1-ButtonRelease> {
+#    set pointButton1 0
+#}
+
+    
+###----------------------------------------------------------------------
+###                         SELECTING
+###----------------------------------------------------------------------
+
+proc newCurrentlySelectedPoints {} {
+    # we should be able to do the below, but problem on alan's machine, and at sfi
+    # so program around it for now.  2002-02-11 (lots of email on this date and the 10th too in mds folder)   
+    # [.c find withtag {newCurrentlySelected&&point}]
+    set selectedPoints ""
+    foreach item [.c find withtag {newCurrentlySelected}] {
+	if {!(-1 == [lsearch [.c gettags $item] point])} {
+	    lappend selectedPoints $item
+	}
+    }
+    return $selectedPoints
+}
+
+proc processPointForSelection {id} {
+    set point $id
+    .c itemconfig $point -outline green
+    .c addtag currentlySelected withtag $point
+}
+
+proc processPointForDeselection {id} {
+    set point $id
+    .c itemconfig $point -outline black
+    .c dtag $point currentlySelected
+}
+
+proc togglePointSelection {points} {
+    foreach point $points {
+	if {([lsearch [.c itemcget $point -tags] currentlySelected] != -1)} {
+	    # item is selcted, deselect it
+	    processPointForDeselection $point
+	} else {
+	    # item is not selcted, select it
+	    processPointForSelection $point
+	}
+    }
+}
+
+proc togglePointsSelection {points} {
+    foreach id $points {
+	togglePointSelection $id
+    }
+}
+
+proc processPointsForSelection {points} {
+    foreach id $points {
+	processPointForSelection $id
+    }
+}
+
+proc unselect-curentlySelected {} {
+    foreach id [.c find withtag {currentlySelected}] {
+	processPointForDeselection $id
+    }
+    .c dtag currentlySelected currentlySelected
+}
+
+proc common-button-1-selecting {x y} {
+    global elasticRectangle startX startY currentItemAtStart 
+    set currentItemAtStart [.c find withtag current]
+    set startX $x
+    set startY $y
+    setIdXYXY [.c find withtag selectionRectangle] $startX $startY $startX $startY
+    # set elasticRectangle [.c create rectangle $startX $startY $startX $startY]
+}
+
+##--------------------- events ------------------------
+
+proc button-1-selecting {x y} {
+    unselect-curentlySelected
+    common-button-1-selecting $x $y
+}
+
+proc shift-button-1-selecting {x y} {
+    common-button-1-selecting $x $y
+}
+
+proc button-1-motion-selecting {x y} {
+    global elasticRectangle startX startY
+    # .c coords $elasticRectangle $startX $startY $x $y
+    setIdXYXY [.c find withtag selectionRectangle] $startX $startY $x $y
+}
+
+proc button-1-release-selecting {x y} {
+    global elasticRectangle currentItemAtStart
+
+    # set foo [.c coords $elasticRectangle]
+    # .c delete $elasticRectangle
+
+    set foo [.c coords [.c find withtag selectionRectangle]]
+    setIdXYXY [.c find withtag selectionRectangle] -10000 -10000 -10000 -10000
+    
+    if {(([lindex $foo 0] == [lindex $foo 2]) && ([lindex $foo 1] == [lindex $foo 3]))} {
+	# no b1 motion, just select the point under the mouse
+	.c addtag newCurrentlySelected withtag $currentItemAtStart
+    } else {
+	# there was an elastic rectangle, select all enclosed (not overlapping) the rectangle
+	.c addtag newCurrentlySelected enclosed [lindex $foo 0] [lindex $foo 1] [lindex $foo 2] [lindex $foo 3]
+    }
+    
+    # togglePointsSelection [newCurrentlySelectedPoints]
+    processPointsForSelection [newCurrentlySelectedPoints]
+    .c dtag newCurrentlySelected
+}
+
+proc control-a-selecting {} {
+     # select all
+    unselect-curentlySelected  ;# to reset colors
+    .c addtag newCurrentlySelected withtag all
+    processPointsForSelection [newCurrentlySelectedPoints]
+    .c dtag newCurrentlySelected
+}
+
+proc control-shift-i-selecting {} {
+    # invert selection
+    .c addtag newCurrentlySelected withtag all
+    togglePointsSelection [newCurrentlySelectedPoints]
+    .c dtag newCurrentlySelected
+}
+
+proc control-shift-a-selecting {} {
+    # select all antigens (add to current selection)
+    .c addtag newCurrentlySelected withtag all
+    togglePointsSelection [newCurrentlySelectedPoints]
+    .c dtag newCurrentlySelected
+}
+
+proc control-shift-s-selecting {} {
+    # select all sera (add to current selection)
+    .c addtag newCurrentlySelected withtag all
+    togglePointsSelection [newCurrentlySelectedPoints]
+    .c dtag newCurrentlySelected
+}
+
+proc button-3-selecting {x y} {
+    set w .states
+    catch {destroy $w}
+    toplevel $w
+    wm title $w "Select points"
+    wm iconname $w "points"
+    # would be good to set the window to pop up right where the mouse is, use wm geometry $w +x+y
+    
+    label $w.msg -wraplength 4i -justify left -text "Select points"
+    pack $w.msg -side top
+    
+    frame $w.buttons
+    pack $w.buttons -side bottom -fill x -pady 2m
+    button $w.buttons.dismiss -text Cancel -command "destroy $w"
+    button $w.buttons.code -text "Select" -command "showCode $w"
+    pack $w.buttons.dismiss $w.buttons.code -side left -expand 1
+    
+    frame $w.frame -borderwidth .5c
+    pack $w.frame -side top -expand yes -fill y
+    
+    scrollbar $w.frame.scroll -command "$w.frame.list yview"
+    listbox $w.frame.list -yscroll "$w.frame.scroll set" -setgrid 1 -height 12 -selectmode extended
+    pack $w.frame.scroll -side right -fill y
+    pack $w.frame.list -side left -expand 1 -fill both
+
+    toLisp "(print '([newCurrentlySelectedPoints]))"
+    
+    $w.frame.list insert 0 foo bar
+
+#   to finish need to figure out why newCurrentlySelectedPoints returns nil
+#             need to put all point names into the listbox (tk needs to have them, or ask lisp for them, and ask lisp for the canvas id's also?)
+#             would be nice to select the currently selected items
+#             then the listbox changes the selection, and raises the points also (although maybe the raising sould be part of other stuff?, or selecting in general)
+
+}
+
+
+###----------------------------------------------------------------------
+###                           FREEZING
+###----------------------------------------------------------------------
+
+# these state colors are also referenced in visualize-mds-coords and reset-point-color
+
+proc button-1-freezing {} {
+    # freeze point
+    global lisp_tk_stream_number
+    foreach point [.c find withtag {currentlySelected}] {
+	set pointState [.c itemcget $point -fill]
+	if {($pointState=="#eeeeee")}  {
+	    #point is disconnected, reconnect it before freezing it
+	    tolisp "(reconnect-point $lisp_tk_stream_number $point nil)"
+	}
+	if {($pointState=="#777777")}  {
+	    # point is already unmoveable, do nothing
+	} else {
+	    # point is movable, make unmoveable
+	    .c itemconf $point -fill "#777777"
+	    .c itemconf [expr $point+1] -fill "#777777"
+	    tolisp "(make-point-unmoveable $lisp_tk_stream_number $point)"
+	}
+    }
+    tolisp "(display-update $lisp_tk_stream_number)"
+}
+
+proc button-3-freezing {} {
+    # unfreeze point
+    global lisp_tk_stream_number itemColor
+    foreach point [.c find withtag {currentlySelected}] {
+	set pointState [.c itemcget $point -fill]
+	if {($pointState=="#777777")}  {
+	    # point unmoveable, make moveable
+	    .c itemconfig $point -fill $itemColor($point)
+	    .c itemconfig [expr $point + 1] -fill $itemColor([expr $point + 1])
+	    tolisp "(make-point-moveable $lisp_tk_stream_number $point)"
+	} else {
+	    # point is already movable, do nothing
+	}
+    }
+}
+
+
+###----------------------------------------------------------------------
+###                           DISCONNECTING
+###----------------------------------------------------------------------
+
+# these state colors are also referenced in visualize-mds-coords and reset-point-color
+
+## watch out here for a point already being frozen too
+proc button-1-disconnecting {} {
+    # disconnect point
+    global lisp_tk_stream_number
+    foreach point [.c find withtag {currentlySelected}] {
+	set pointState [.c itemcget $point -fill]
+	if {($pointState=="#777777")} {
+	    # point is frozen, unfreeze it before disconnecting it
+	    tolisp "(make-point-moveable $lisp_tk_stream_number $point)"
+	}
+	if {($pointState=="#eeeeee")}  {
+	    # point is already disconnected, do nothing   POSSIBLE ERROR HERE IF THE COLOR IS eeeeee BY ACCIDENT (POSSIBLE WHEN WE COLOR OURSELVES)
+	} else {
+	    # point is connected, disconnect it
+	    tolisp "(disconnect-point $lisp_tk_stream_number $point nil)"
+	    .c itemconfig $point -fill "#eeeeee"
+	    .c itemconfig [expr $point + 1] -fill "#eeeeee"
+	}
+    }
+    tolisp "(display-update $lisp_tk_stream_number)"
+}
+
+proc button-3-disconnecting {} {
+    # reconnect point
+    global lisp_tk_stream_number itemColor
+    foreach point [.c find withtag {currentlySelected}] {
+	set pointState [.c itemcget $point -fill]
+	if {($pointState=="#eeeeee")}  {
+	    # point is disconnected, reconnect it
+	    tolisp "(reconnect-point $lisp_tk_stream_number $point nil)"
+	    .c itemconfig $point -fill $itemColor($point)
+	    .c itemconfig [expr $point + 1] -fill $itemColor([expr $point + 1])
+	} else {
+	    # point is already connected, do nothing
+	}
+    }
+    tolisp "(display-update $lisp_tk_stream_number)"
+}
+
+
+###----------------------------------------------------------------------
+###                           ADJUSTING
+###----------------------------------------------------------------------
+
+proc button-1-adjusting {} {
+    # adjusting point
+    global lisp_tk_stream_number
+    foreach point [.c find withtag {currentlySelected}] {
+	tolisp "(adjust-from-canvas-id $lisp_tk_stream_number $point 'dec nil)"
+    }
+    tolisp "(display-update $lisp_tk_stream_number)"
+}
+
+proc button-3-adjusting {} {
+    # adjusting point
+    global lisp_tk_stream_number
+    foreach point [.c find withtag {currentlySelected}] {
+	tolisp "(adjust-from-canvas-id $lisp_tk_stream_number $point 'inc nil)"
+    }
+    tolisp "(display-update $lisp_tk_stream_number)"
+}
+    
+proc shift-button-1-adjusting {} {
+    # set selected points to be adjusted automatically
+    global lisp_tk_stream_number
+    foreach point [.c find withtag {currentlySelected}] {
+	tolisp "(set-automatic-adjust-from-canvas-id $lisp_tk_stream_number $point nil)"
+    }
+    # tolisp "(display-update $lisp_tk_stream_number)"  not needed as we have no indicator on the plot right now
+}
+
+proc shift-button-3-adjusting {} {
+    # set selected points to not be adjusted automatically
+    global lisp_tk_stream_number
+    foreach point [.c find withtag {currentlySelected}] {
+	tolisp "(unset-automatic-adjust-from-canvas-id $lisp_tk_stream_number $point nil)"
+    }
+    # tolisp "(display-update $lisp_tk_stream_number)"  not needed as we have no indicator on the plot right now
+}
+
+
+###----------------------------------------------------------------------
+###                           NAMEING
+###----------------------------------------------------------------------
+
+proc button-1-nameing {} {
+    # nameing point
+    global lisp_tk_stream_number
+    if {([.c find withtag {currentlySelected}] == "")} {
+	tolisp "(restore-all-names $lisp_tk_stream_number)"
+    } else {
+	foreach point [.c find withtag {currentlySelected}] {
+	    tolisp "(restore-name $lisp_tk_stream_number $point nil)"
+	}
+	tolisp "(display-update $lisp_tk_stream_number)"
+    }
+}
+
+proc button-3-nameing {} {
+    # unnameing point
+    global lisp_tk_stream_number
+    if {([.c find withtag {currentlySelected}] == "")} {
+	tolisp "(remove-all-names $lisp_tk_stream_number)"
+    } else {
+	foreach point [.c find withtag {currentlySelected}] {
+	    tolisp "(remove-name $lisp_tk_stream_number $point nil)"
+	}
+	tolisp "(display-update $lisp_tk_stream_number)"
+    }
+}
+    
+
+###----------------------------------------------------------------------
+###                          TRANSLATING
+###----------------------------------------------------------------------
+
+proc button-1-translating {x y} {
+    global translateStartX translateStartY motionLastX motionLastY translateSelectedPoints
+    if {([.c find withtag {currentlySelected}] == "")} {
+	set translateSelectedPoints 0
+    } else {
+	set translateSelectedPoints 1
+    }
+    set translateStartX $x
+    set translateStartY $y
+    set motionLastX $x
+    set motionLastY $y
+}
+
+proc button-1-motion-translating {x y} {
+    global translateStartX translateStartY motionLastX motionLastY translateSelectedPoints
+    if {($translateSelectedPoints == 1)} {
+	set xDelta [expr $x - $motionLastX]
+	set yDelta [expr $y - $motionLastY]
+	foreach point [.c find withtag {currentlySelected}] {
+	    mvIdXY $point $xDelta $yDelta
+	    mvIdXY [expr $point+1] $xDelta $yDelta
+	}
+	set motionLastX $x
+	set motionLastY $y
+    }
+}
+
+proc button-1-release-translating {x y} {
+    global lisp_tk_stream_number translateStartX translateStartY translateSelectedPoints
+    if {(([expr $x-$translateStartX] != 0) || ([expr $y-$translateStartY] != 0))} {
+	if {($translateSelectedPoints == 1)} {
+	    # only operate on selected points
+	    foreach point [.c find withtag {currentlySelected}] {
+		tolisp "(move-point-by-mouse-delta $lisp_tk_stream_number $point [expr $x-$translateStartX] [expr $y-$translateStartY])"
+	    }
+	    set translateSelectedPoints 0
+	} else {
+	    # operate on all points
+	    tolisp "(set-canvas-size-info $lisp_tk_stream_number '[wm geometry .])"
+	    tolisp "(disable-basis-vector-point-indices $lisp_tk_stream_number)"
+	    tolisp "(translate-all-coordss $lisp_tk_stream_number [expr $x-$translateStartX] [expr $y-$translateStartY])"
+	}
+    }
+}
+
+###----------------------------------------------------------------------
+###                           ZOOMING
+###----------------------------------------------------------------------
+
+set tinyZoomQuantum 1.01
+set smallZoomQuantum 1.1
+set largeZoomQuantum 2.0
+
+proc zoom {x y amount} {
+    global lisp_tk_stream_number
+    set currentSelection [.c find withtag {currentlySelected}]
+    if {($currentSelection == "")} {
+	tolisp "(set-canvas-size-info $lisp_tk_stream_number '[wm geometry .])"
+	tolisp "(disable-basis-vector-point-indices $lisp_tk_stream_number)"
+	tolisp "(zoom-all-coordss-centered $lisp_tk_stream_number $amount $x $y)"
+    } else {
+	tolisp "(set-canvas-size-info $lisp_tk_stream_number '[wm geometry .])"
+	tolisp "(disable-basis-vector-point-indices $lisp_tk_stream_number)"
+	tolisp "(zoom-all-coordss-centered $lisp_tk_stream_number $amount $x $y :point-indices-subset (get-mds-point-indices-from-mds-window-canvas-ids $lisp_tk_stream_number '($currentSelection)))"
+    }
+}
+
+proc button-1-zooming {x y} {
+    global smallZoomQuantum
+    zoom $x $y $smallZoomQuantum
+}
+
+proc button-3-zooming {x y} {
+    global smallZoomQuantum
+    zoom $x $y [expr (1 / $smallZoomQuantum)]
+}
+    
+proc shift-button-1-zooming {x y} {
+    global largeZoomQuantum
+    zoom $x $y $largeZoomQuantum
+}
+
+proc shift-button-3-zooming {x y} {
+    global largeZoomQuantum
+    zoom $x $y [expr (1 / $largeZoomQuantum)]
+}
+
+proc control-button-1-zooming {x y} {
+    global tinyZoomQuantum
+    zoom $x $y $tinyZoomQuantum
+}
+
+proc control-button-3-zooming {x y} {
+    global tinyZoomQuantum
+    zoom $x $y [expr (1 / $tinyZoomQuantum)]
+}
+
+# proc button-2-zooming {x y} {
+#     global tinyZoomQuantum
+#     zoom $x $y $tinyZoomQuantum
+# }
+# 
+# proc shift-button-2-zooming {x y} {
+#     global tinyZoomQuantum
+#     zoom $x $y [expr (1 / $tinyZoomQuantum)]
+# }
+
+
+###----------------------------------------------------------------------
+###                           ROTATING
+###----------------------------------------------------------------------
+
+set rotateQuantum 10
+
+proc rotate {x y amount} {
+    global lisp_tk_stream_number 
+    set currentSelection [.c find withtag {currentlySelected}]
+    if {($currentSelection == "")} {
+	tolisp "(set-canvas-size-info $lisp_tk_stream_number '[wm geometry .])"
+	tolisp "(disable-basis-vector-point-indices $lisp_tk_stream_number)"
+	tolisp "(rotate-all-coordss-centered $lisp_tk_stream_number $amount $x $y)"
+    } else {
+	tolisp "(set-canvas-size-info $lisp_tk_stream_number '[wm geometry .])"
+	tolisp "(disable-basis-vector-point-indices $lisp_tk_stream_number)"
+	tolisp "(rotate-all-coordss-centered $lisp_tk_stream_number $amount $x $y :point-indices-subset (get-mds-point-indices-from-mds-window-canvas-ids $lisp_tk_stream_number '($currentSelection)))"
+    }
+}
+
+proc button-1-rotating {x y} {
+    global rotateQuantum
+    rotate $x $y [expr -$rotateQuantum]
+}
+
+proc shift-button-1-rotating {x y} {
+    global rotateQuantum
+    rotate $x $y [expr -$rotateQuantum*9]   ;# 90 degrees
+}
+
+proc button-3-rotating {x y} {
+    global rotateQuantum
+    rotate $x $y $rotateQuantum
+}
+    
+proc shift-button-3-rotating {x y} {
+    global rotateQuantum
+    rotate $x $y [expr $rotateQuantum*9]   ;# 90 degrees
+}
+
+
+###----------------------------------------------------------------------
+###               SELECTING DIMENSIONS TO ROTATE
+###----------------------------------------------------------------------
+
+.c bind dimensionPair <Double-Button-3> {
+    tolisp "(enable-basis-vector-point-indices $lisp_tk_stream_number)"
+}
+
+.c bind dimensionPair <Button-3> {
+    tolisp "(disable-basis-vector-point-indices $lisp_tk_stream_number)"
+    tolisp "(set-dimension-pair-from-dimensionPair $lisp_tk_stream_number [.c find withtag current])"
+}
+
+#Not implemented yet on the lisp side
+#.c bind axis <Button-3> {
+#    tolisp "(set-dimension-pair-from-axis $lisp_tk_stream_number [.c find withtag current])"
+#}
+
+
+###----------------------------------------------------------------------
+###                       setting plot spec data
+###----------------------------------------------------------------------
+
+menubutton .plotspec-button -bitmap @$bitmapDir/plot-spec.xbm -direction right -menu .plotspec-button.menu -relief raised
+menu .plotspec-button.menu -tearoff 0
+
+.plotspec-button.menu add cascade -label "Color" -menu .plotspec-button.menu.color
+menu .plotspec-button.menu.color -tearoff 0
+.plotspec-button.menu.color add command -label "Blue" -command {
+    tolisp "(set-plot-spec-data-from-mds-window $lisp_tk_stream_number \#'get-coords-colors \#'set-coords-colors \"blue\" '([.c find withtag {currentlySelected}]))"}
+.plotspec-button.menu.color add command -label "Red" -command {
+    tolisp "(set-plot-spec-data-from-mds-window $lisp_tk_stream_number \#'get-coords-colors \#'set-coords-colors \"red\" '([.c find withtag {currentlySelected}]))"}
+.plotspec-button.menu.color add command -label "Green" -command {
+    tolisp "(set-plot-spec-data-from-mds-window $lisp_tk_stream_number \#'get-coords-colors \#'set-coords-colors \"green\" '([.c find withtag {currentlySelected}]))"}
+.plotspec-button.menu.color add command -label "Orange" -command {
+    tolisp "(set-plot-spec-data-from-mds-window $lisp_tk_stream_number \#'get-coords-colors \#'set-coords-colors \"orange\" '([.c find withtag {currentlySelected}]))"}
+.plotspec-button.menu.color add command -label "Purple" -command {
+    tolisp "(set-plot-spec-data-from-mds-window $lisp_tk_stream_number \#'get-coords-colors \#'set-coords-colors \"purple\" '([.c find withtag {currentlySelected}]))"}
+.plotspec-button.menu.color add command -label "Pink" -command {
+    tolisp "(set-plot-spec-data-from-mds-window $lisp_tk_stream_number \#'get-coords-colors \#'set-coords-colors \"pink\" '([.c find withtag {currentlySelected}]))"}
+.plotspec-button.menu.color add command -label "Yellow" -command {
+    tolisp "(set-plot-spec-data-from-mds-window $lisp_tk_stream_number \#'get-coords-colors \#'set-coords-colors \"yellow\" '([.c find withtag {currentlySelected}]))"}
+.plotspec-button.menu.color add command -label "Black" -command {
+    tolisp "(set-plot-spec-data-from-mds-window $lisp_tk_stream_number \#'get-coords-colors \#'set-coords-colors \"black\" '([.c find withtag {currentlySelected}]))"}
+.plotspec-button.menu.color add command -label "Transparent" -command {
+    tolisp "(set-plot-spec-data-from-mds-window $lisp_tk_stream_number \#'get-coords-colors \#'set-coords-colors \"{}\" '([.c find withtag {currentlySelected}]))"}
+.plotspec-button.menu.color add command -label "Science purple" -command {
+    tolisp "(set-plot-spec-data-from-mds-window $lisp_tk_stream_number \#'get-coords-colors \#'set-coords-colors \"#a208bd\" '([.c find withtag {currentlySelected}]))"}
+.plotspec-button.menu.color add command -label "Science turquoise" -command {
+    tolisp "(set-plot-spec-data-from-mds-window $lisp_tk_stream_number \#'get-coords-colors \#'set-coords-colors \"#00ffe1\" '([.c find withtag {currentlySelected}]))"}
+.plotspec-button.menu.color add command -label "Science yellow" -command {
+    tolisp "(set-plot-spec-data-from-mds-window $lisp_tk_stream_number \#'get-coords-colors \#'set-coords-colors \"#f9d004\" '([.c find withtag {currentlySelected}]))"}
+.plotspec-button.menu.color add command -label "Science brown" -command {
+    tolisp "(set-plot-spec-data-from-mds-window $lisp_tk_stream_number \#'get-coords-colors \#'set-coords-colors \"#ab4c00\" '([.c find withtag {currentlySelected}]))"}
+.plotspec-button.menu.color add command -label "Science green" -command {
+    tolisp "(set-plot-spec-data-from-mds-window $lisp_tk_stream_number \#'get-coords-colors \#'set-coords-colors \"#00ff00\" '([.c find withtag {currentlySelected}]))"}
+.plotspec-button.menu.color add command -label "Science blue" -command {
+    tolisp "(set-plot-spec-data-from-mds-window $lisp_tk_stream_number \#'get-coords-colors \#'set-coords-colors \"#0000ff\" '([.c find withtag {currentlySelected}]))"}
+.plotspec-button.menu.color add command -label "Science red" -command {
+    tolisp "(set-plot-spec-data-from-mds-window $lisp_tk_stream_number \#'get-coords-colors \#'set-coords-colors \"#ff0000\" '([.c find withtag {currentlySelected}]))"}
+.plotspec-button.menu.color add command -label "Science pink" -command {
+    tolisp "(set-plot-spec-data-from-mds-window $lisp_tk_stream_number \#'get-coords-colors \#'set-coords-colors \"#f894f8\" '([.c find withtag {currentlySelected}]))"}
+.plotspec-button.menu.color add command -label "Science dark green" -command {
+    tolisp "(set-plot-spec-data-from-mds-window $lisp_tk_stream_number \#'get-coords-colors \#'set-coords-colors \"#37802b\" '([.c find withtag {currentlySelected}]))"}
+.plotspec-button.menu.color add command -label "Science light blue" -command {
+    tolisp "(set-plot-spec-data-from-mds-window $lisp_tk_stream_number \#'get-coords-colors \#'set-coords-colors \"#00afff\" '([.c find withtag {currentlySelected}]))"}
+.plotspec-button.menu.color add command -label "Science gold" -command {
+    tolisp "(set-plot-spec-data-from-mds-window $lisp_tk_stream_number \#'get-coords-colors \#'set-coords-colors \"#ffd700\" '([.c find withtag {currentlySelected}]))"}
+.plotspec-button.menu.color add command -label "Grey10" -command {
+    tolisp "(set-plot-spec-data-from-mds-window $lisp_tk_stream_number \#'get-coords-colors \#'set-coords-colors \"grey10\" '([.c find withtag {currentlySelected}]))"}
+.plotspec-button.menu.color add command -label "Grey20" -command {
+    tolisp "(set-plot-spec-data-from-mds-window $lisp_tk_stream_number \#'get-coords-colors \#'set-coords-colors \"grey20\" '([.c find withtag {currentlySelected}]))"}
+.plotspec-button.menu.color add command -label "Grey30" -command {
+    tolisp "(set-plot-spec-data-from-mds-window $lisp_tk_stream_number \#'get-coords-colors \#'set-coords-colors \"grey30\" '([.c find withtag {currentlySelected}]))"}
+.plotspec-button.menu.color add command -label "Grey40" -command {
+    tolisp "(set-plot-spec-data-from-mds-window $lisp_tk_stream_number \#'get-coords-colors \#'set-coords-colors \"grey40\" '([.c find withtag {currentlySelected}]))"}
+.plotspec-button.menu.color add command -label "Grey50" -command {
+    tolisp "(set-plot-spec-data-from-mds-window $lisp_tk_stream_number \#'get-coords-colors \#'set-coords-colors \"grey50\" '([.c find withtag {currentlySelected}]))"}
+.plotspec-button.menu.color add command -label "Grey60" -command {
+    tolisp "(set-plot-spec-data-from-mds-window $lisp_tk_stream_number \#'get-coords-colors \#'set-coords-colors \"grey60\" '([.c find withtag {currentlySelected}]))"}
+.plotspec-button.menu.color add command -label "Grey70" -command {
+    tolisp "(set-plot-spec-data-from-mds-window $lisp_tk_stream_number \#'get-coords-colors \#'set-coords-colors \"grey70\" '([.c find withtag {currentlySelected}]))"}
+.plotspec-button.menu.color add command -label "Grey80" -command {
+    tolisp "(set-plot-spec-data-from-mds-window $lisp_tk_stream_number \#'get-coords-colors \#'set-coords-colors \"grey80\" '([.c find withtag {currentlySelected}]))"}
+.plotspec-button.menu.color add command -label "Grey90" -command {
+    tolisp "(set-plot-spec-data-from-mds-window $lisp_tk_stream_number \#'get-coords-colors \#'set-coords-colors \"grey90\" '([.c find withtag {currentlySelected}]))"}
+
+
+.plotspec-button.menu add cascade -label "Name color" -menu .plotspec-button.menu.namecolor
+menu .plotspec-button.menu.namecolor -tearoff 0
+.plotspec-button.menu.namecolor add command -label "Blue" -command {
+    tolisp "(set-plot-spec-data-from-mds-window $lisp_tk_stream_number \#'get-coords-name-colors \#'set-coords-name-colors \"blue\" '([.c find withtag {currentlySelected}]))"}
+.plotspec-button.menu.namecolor add command -label "Red" -command {
+    tolisp "(set-plot-spec-data-from-mds-window $lisp_tk_stream_number \#'get-coords-name-colors \#'set-coords-name-colors \"red\" '([.c find withtag {currentlySelected}]))"}
+.plotspec-button.menu.namecolor add command -label "Green" -command {
+    tolisp "(set-plot-spec-data-from-mds-window $lisp_tk_stream_number \#'get-coords-name-colors \#'set-coords-name-colors \"green\" '([.c find withtag {currentlySelected}]))"}
+.plotspec-button.menu.namecolor add command -label "Orange" -command {
+    tolisp "(set-plot-spec-data-from-mds-window $lisp_tk_stream_number \#'get-coords-name-colors \#'set-coords-name-colors \"orange\" '([.c find withtag {currentlySelected}]))"}
+.plotspec-button.menu.namecolor add command -label "Purple" -command {
+    tolisp "(set-plot-spec-data-from-mds-window $lisp_tk_stream_number \#'get-coords-name-colors \#'set-coords-name-colors \"purple\" '([.c find withtag {currentlySelected}]))"}
+.plotspec-button.menu.namecolor add command -label "Pink" -command {
+    tolisp "(set-plot-spec-data-from-mds-window $lisp_tk_stream_number \#'get-coords-name-colors \#'set-coords-name-colors \"pink\" '([.c find withtag {currentlySelected}]))"}
+.plotspec-button.menu.namecolor add command -label "Yellow" -command {
+    tolisp "(set-plot-spec-data-from-mds-window $lisp_tk_stream_number \#'get-coords-name-colors \#'set-coords-name-colors \"yellow\" '([.c find withtag {currentlySelected}]))"}
+.plotspec-button.menu.namecolor add command -label "Black" -command {
+    tolisp "(set-plot-spec-data-from-mds-window $lisp_tk_stream_number \#'get-coords-name-colors \#'set-coords-name-colors \"black\" '([.c find withtag {currentlySelected}]))"}
+.plotspec-button.menu.namecolor add command -label "Transparent" -command {
+    tolisp "(set-plot-spec-data-from-mds-window $lisp_tk_stream_number \#'get-coords-name-colors \#'set-coords-name-colors \"{}\" '([.c find withtag {currentlySelected}]))"}
+
+.plotspec-button.menu add cascade -label "Symbol size" -menu .plotspec-button.menu.size
+menu .plotspec-button.menu.size -tearoff 0
+.plotspec-button.menu.size add command -label "0.1" -command {
+    tolisp "(set-plot-spec-data-from-mds-window $lisp_tk_stream_number \#'get-coords-dot-sizes \#'set-coords-dot-sizes 0.1 '([.c find withtag {currentlySelected}]))"}
+.plotspec-button.menu.size add command -label "0.25" -command {
+    tolisp "(set-plot-spec-data-from-mds-window $lisp_tk_stream_number \#'get-coords-dot-sizes \#'set-coords-dot-sizes 0.25 '([.c find withtag {currentlySelected}]))"}
+.plotspec-button.menu.size add command -label "0.5" -command {
+    tolisp "(set-plot-spec-data-from-mds-window $lisp_tk_stream_number \#'get-coords-dot-sizes \#'set-coords-dot-sizes 0.5 '([.c find withtag {currentlySelected}]))"}
+.plotspec-button.menu.size add command -label "1" -command {
+    tolisp "(set-plot-spec-data-from-mds-window $lisp_tk_stream_number \#'get-coords-dot-sizes \#'set-coords-dot-sizes 1 '([.c find withtag {currentlySelected}]))"}
+.plotspec-button.menu.size add command -label "1.5" -command {
+    tolisp "(set-plot-spec-data-from-mds-window $lisp_tk_stream_number \#'get-coords-dot-sizes \#'set-coords-dot-sizes 1.5 '([.c find withtag {currentlySelected}]))"}
+.plotspec-button.menu.size add command -label "2" -command {
+    tolisp "(set-plot-spec-data-from-mds-window $lisp_tk_stream_number \#'get-coords-dot-sizes \#'set-coords-dot-sizes 2 '([.c find withtag {currentlySelected}]))"}
+.plotspec-button.menu.size add command -label "2.5" -command {
+    tolisp "(set-plot-spec-data-from-mds-window $lisp_tk_stream_number \#'get-coords-dot-sizes \#'set-coords-dot-sizes 2.5 '([.c find withtag {currentlySelected}]))"}
+.plotspec-button.menu.size add command -label "3" -command {
+    tolisp "(set-plot-spec-data-from-mds-window $lisp_tk_stream_number \#'get-coords-dot-sizes \#'set-coords-dot-sizes 3 '([.c find withtag {currentlySelected}]))"}
+.plotspec-button.menu.size add command -label "3.5" -command {
+    tolisp "(set-plot-spec-data-from-mds-window $lisp_tk_stream_number \#'get-coords-dot-sizes \#'set-coords-dot-sizes 3.5 '([.c find withtag {currentlySelected}]))"}
+.plotspec-button.menu.size add command -label "4" -command {
+    tolisp "(set-plot-spec-data-from-mds-window $lisp_tk_stream_number \#'get-coords-dot-sizes \#'set-coords-dot-sizes 4 '([.c find withtag {currentlySelected}]))"}
+.plotspec-button.menu.size add command -label "5" -command {
+    tolisp "(set-plot-spec-data-from-mds-window $lisp_tk_stream_number \#'get-coords-dot-sizes \#'set-coords-dot-sizes 5 '([.c find withtag {currentlySelected}]))"}
+.plotspec-button.menu.size add command -label "6" -command {
+    tolisp "(set-plot-spec-data-from-mds-window $lisp_tk_stream_number \#'get-coords-dot-sizes \#'set-coords-dot-sizes 6 '([.c find withtag {currentlySelected}]))"}
+.plotspec-button.menu.size add command -label "7" -command {
+    tolisp "(set-plot-spec-data-from-mds-window $lisp_tk_stream_number \#'get-coords-dot-sizes \#'set-coords-dot-sizes 7 '([.c find withtag {currentlySelected}]))"}
+.plotspec-button.menu.size add command -label "8" -command {
+    tolisp "(set-plot-spec-data-from-mds-window $lisp_tk_stream_number \#'get-coords-dot-sizes \#'set-coords-dot-sizes 8 '([.c find withtag {currentlySelected}]))"}
+.plotspec-button.menu.size add command -label "9" -command {
+    tolisp "(set-plot-spec-data-from-mds-window $lisp_tk_stream_number \#'get-coords-dot-sizes \#'set-coords-dot-sizes 9 '([.c find withtag {currentlySelected}]))"}
+.plotspec-button.menu.size add command -label "10" -command {
+    tolisp "(set-plot-spec-data-from-mds-window $lisp_tk_stream_number \#'get-coords-dot-sizes \#'set-coords-dot-sizes 10 '([.c find withtag {currentlySelected}]))"}
+.plotspec-button.menu.size add command -label "20" -command {
+    tolisp "(set-plot-spec-data-from-mds-window $lisp_tk_stream_number \#'get-coords-dot-sizes \#'set-coords-dot-sizes 20 '([.c find withtag {currentlySelected}]))"}
+.plotspec-button.menu.size add command -label "30" -command {
+    tolisp "(set-plot-spec-data-from-mds-window $lisp_tk_stream_number \#'get-coords-dot-sizes \#'set-coords-dot-sizes 30 '([.c find withtag {currentlySelected}]))"}
+.plotspec-button.menu.size add command -label "40" -command {
+    tolisp "(set-plot-spec-data-from-mds-window $lisp_tk_stream_number \#'get-coords-dot-sizes \#'set-coords-dot-sizes 40 '([.c find withtag {currentlySelected}]))"}
+.plotspec-button.menu.size add command -label "50" -command {
+    tolisp "(set-plot-spec-data-from-mds-window $lisp_tk_stream_number \#'get-coords-dot-sizes \#'set-coords-dot-sizes 50 '([.c find withtag {currentlySelected}]))"}
+.plotspec-button.menu.size add command -label "100" -command {
+    tolisp "(set-plot-spec-data-from-mds-window $lisp_tk_stream_number \#'get-coords-dot-sizes \#'set-coords-dot-sizes 100 '([.c find withtag {currentlySelected}]))"}
+.plotspec-button.menu.size add command -label "200" -command {
+    tolisp "(set-plot-spec-data-from-mds-window $lisp_tk_stream_number \#'get-coords-dot-sizes \#'set-coords-dot-sizes 200 '([.c find withtag {currentlySelected}]))"}
+.plotspec-button.menu.size add command -label "300" -command {
+    tolisp "(set-plot-spec-data-from-mds-window $lisp_tk_stream_number \#'get-coords-dot-sizes \#'set-coords-dot-sizes 300 '([.c find withtag {currentlySelected}]))"}
+.plotspec-button.menu.size add command -label "400" -command {
+    tolisp "(set-plot-spec-data-from-mds-window $lisp_tk_stream_number \#'get-coords-dot-sizes \#'set-coords-dot-sizes 400 '([.c find withtag {currentlySelected}]))"}
+.plotspec-button.menu.size add command -label "500" -command {
+    tolisp "(set-plot-spec-data-from-mds-window $lisp_tk_stream_number \#'get-coords-dot-sizes \#'set-coords-dot-sizes 500 '([.c find withtag {currentlySelected}]))"}
+.plotspec-button.menu.size add command -label "1000" -command {
+    tolisp "(set-plot-spec-data-from-mds-window $lisp_tk_stream_number \#'get-coords-dot-sizes \#'set-coords-dot-sizes 1000 '([.c find withtag {currentlySelected}]))"}
+
+.plotspec-button.menu add cascade -label "Name size" -menu .plotspec-button.menu.namesize
+menu .plotspec-button.menu.namesize -tearoff 0
+.plotspec-button.menu.namesize add command -label "1" -command {
+    tolisp "(set-plot-spec-data-from-mds-window $lisp_tk_stream_number \#'get-coords-name-sizes \#'set-coords-name-sizes 1 '([.c find withtag {currentlySelected}]))"}
+.plotspec-button.menu.namesize add command -label "2" -command {
+    tolisp "(set-plot-spec-data-from-mds-window $lisp_tk_stream_number \#'get-coords-name-sizes \#'set-coords-name-sizes 2 '([.c find withtag {currentlySelected}]))"}
+.plotspec-button.menu.namesize add command -label "3" -command {
+    tolisp "(set-plot-spec-data-from-mds-window $lisp_tk_stream_number \#'get-coords-name-sizes \#'set-coords-name-sizes 3 '([.c find withtag {currentlySelected}]))"}
+.plotspec-button.menu.namesize add command -label "4" -command {
+    tolisp "(set-plot-spec-data-from-mds-window $lisp_tk_stream_number \#'get-coords-name-sizes \#'set-coords-name-sizes 4 '([.c find withtag {currentlySelected}]))"}
+.plotspec-button.menu.namesize add command -label "5" -command {
+    tolisp "(set-plot-spec-data-from-mds-window $lisp_tk_stream_number \#'get-coords-name-sizes \#'set-coords-name-sizes 5 '([.c find withtag {currentlySelected}]))"}
+.plotspec-button.menu.namesize add command -label "6" -command {
+    tolisp "(set-plot-spec-data-from-mds-window $lisp_tk_stream_number \#'get-coords-name-sizes \#'set-coords-name-sizes 6 '([.c find withtag {currentlySelected}]))"}
+.plotspec-button.menu.namesize add command -label "7" -command {
+    tolisp "(set-plot-spec-data-from-mds-window $lisp_tk_stream_number \#'get-coords-name-sizes \#'set-coords-name-sizes 7 '([.c find withtag {currentlySelected}]))"}
+.plotspec-button.menu.namesize add command -label "8" -command {
+    tolisp "(set-plot-spec-data-from-mds-window $lisp_tk_stream_number \#'get-coords-name-sizes \#'set-coords-name-sizes 8 '([.c find withtag {currentlySelected}]))"}
+.plotspec-button.menu.namesize add command -label "9" -command {
+    tolisp "(set-plot-spec-data-from-mds-window $lisp_tk_stream_number \#'get-coords-name-sizes \#'set-coords-name-sizes 9 '([.c find withtag {currentlySelected}]))"}
+.plotspec-button.menu.namesize add command -label "10" -command {
+    tolisp "(set-plot-spec-data-from-mds-window $lisp_tk_stream_number \#'get-coords-name-sizes \#'set-coords-name-sizes 10 '([.c find withtag {currentlySelected}]))"}
+.plotspec-button.menu.namesize add command -label "11" -command {
+    tolisp "(set-plot-spec-data-from-mds-window $lisp_tk_stream_number \#'get-coords-name-sizes \#'set-coords-name-sizes 11 '([.c find withtag {currentlySelected}]))"}
+.plotspec-button.menu.namesize add command -label "12" -command {
+    tolisp "(set-plot-spec-data-from-mds-window $lisp_tk_stream_number \#'get-coords-name-sizes \#'set-coords-name-sizes 12 '([.c find withtag {currentlySelected}]))"}
+.plotspec-button.menu.namesize add command -label "13" -command {
+    tolisp "(set-plot-spec-data-from-mds-window $lisp_tk_stream_number \#'get-coords-name-sizes \#'set-coords-name-sizes 13 '([.c find withtag {currentlySelected}]))"}
+.plotspec-button.menu.namesize add command -label "14" -command {
+    tolisp "(set-plot-spec-data-from-mds-window $lisp_tk_stream_number \#'get-coords-name-sizes \#'set-coords-name-sizes 14 '([.c find withtag {currentlySelected}]))"}
+.plotspec-button.menu.namesize add command -label "15" -command {
+    tolisp "(set-plot-spec-data-from-mds-window $lisp_tk_stream_number \#'get-coords-name-sizes \#'set-coords-name-sizes 15 '([.c find withtag {currentlySelected}]))"}
+.plotspec-button.menu.namesize add command -label "16" -command {
+    tolisp "(set-plot-spec-data-from-mds-window $lisp_tk_stream_number \#'get-coords-name-sizes \#'set-coords-name-sizes 16 '([.c find withtag {currentlySelected}]))"}
+
+.plotspec-button.menu add cascade -label "Shape" -menu .plotspec-button.menu.shape
+menu .plotspec-button.menu.shape -tearoff 0
+.plotspec-button.menu.shape add command -label "Circle" -command {
+    tolisp "(set-plot-spec-data-from-mds-window $lisp_tk_stream_number \#'get-coords-shapes \#'set-coords-shapes 'circle '([.c find withtag {currentlySelected}]))"}
+.plotspec-button.menu.shape add command -label "Square" -command {
+    tolisp "(set-plot-spec-data-from-mds-window $lisp_tk_stream_number \#'get-coords-shapes \#'set-coords-shapes 'rectangle '([.c find withtag {currentlySelected}]))"}
+.plotspec-button.menu.shape add command -label "Up triangle" -command {
+    tolisp "(set-plot-spec-data-from-mds-window $lisp_tk_stream_number \#'get-coords-shapes \#'set-coords-shapes 'triangle '([.c find withtag {currentlySelected}]))"}
+.plotspec-button.menu.shape add command -label "Down triangle" -command {
+    tolisp "(set-plot-spec-data-from-mds-window $lisp_tk_stream_number \#'get-coords-shapes \#'set-coords-shapes 'down-triangle '([.c find withtag {currentlySelected}]))"}
+
+.plotspec-button.menu add cascade -label "Transparency" -menu .plotspec-button.menu.transparency
+menu .plotspec-button.menu.transparency -tearoff 0
+.plotspec-button.menu.transparency add command -label "0.0" -command {
+    tolisp "(set-plot-spec-data-from-mds-window $lisp_tk_stream_number \#'get-coords-transparencies \#'set-coords-transparencies 0.0 '([.c find withtag {currentlySelected}]))"}
+.plotspec-button.menu.transparency add command -label "0.1" -command {
+    tolisp "(set-plot-spec-data-from-mds-window $lisp_tk_stream_number \#'get-coords-transparencies \#'set-coords-transparencies 0.1 '([.c find withtag {currentlySelected}]))"}
+.plotspec-button.menu.transparency add command -label "0.2" -command {
+    tolisp "(set-plot-spec-data-from-mds-window $lisp_tk_stream_number \#'get-coords-transparencies \#'set-coords-transparencies 0.2 '([.c find withtag {currentlySelected}]))"}
+.plotspec-button.menu.transparency add command -label "0.3" -command {
+    tolisp "(set-plot-spec-data-from-mds-window $lisp_tk_stream_number \#'get-coords-transparencies \#'set-coords-transparencies 0.3 '([.c find withtag {currentlySelected}]))"}
+.plotspec-button.menu.transparency add command -label "0.4" -command {
+    tolisp "(set-plot-spec-data-from-mds-window $lisp_tk_stream_number \#'get-coords-transparencies \#'set-coords-transparencies 0.4 '([.c find withtag {currentlySelected}]))"}
+.plotspec-button.menu.transparency add command -label "0.5" -command {
+    tolisp "(set-plot-spec-data-from-mds-window $lisp_tk_stream_number \#'get-coords-transparencies \#'set-coords-transparencies 0.5 '([.c find withtag {currentlySelected}]))"}
+.plotspec-button.menu.transparency add command -label "0.6" -command {
+    tolisp "(set-plot-spec-data-from-mds-window $lisp_tk_stream_number \#'get-coords-transparencies \#'set-coords-transparencies 0.6 '([.c find withtag {currentlySelected}]))"}
+.plotspec-button.menu.transparency add command -label "0.7" -command {
+    tolisp "(set-plot-spec-data-from-mds-window $lisp_tk_stream_number \#'get-coords-transparencies \#'set-coords-transparencies 0.7 '([.c find withtag {currentlySelected}]))"}
+.plotspec-button.menu.transparency add command -label "0.8" -command {
+    tolisp "(set-plot-spec-data-from-mds-window $lisp_tk_stream_number \#'get-coords-transparencies \#'set-coords-transparencies 0.8 '([.c find withtag {currentlySelected}]))"}
+.plotspec-button.menu.transparency add command -label "0.9" -command {
+    tolisp "(set-plot-spec-data-from-mds-window $lisp_tk_stream_number \#'get-coords-transparencies \#'set-coords-transparencies 0.9 '([.c find withtag {currentlySelected}]))"}
+.plotspec-button.menu.transparency add command -label "1.0" -command {
+    tolisp "(set-plot-spec-data-from-mds-window $lisp_tk_stream_number \#'get-coords-transparencies \#'set-coords-transparencies 1.0 '([.c find withtag {currentlySelected}]))"}
+
+
+.plotspec-button.menu add command -label "Raise selected points" -command {
+    tolisp "(raise-selected-points-from-mds-window $lisp_tk_stream_number '([.c find withtag {currentlySelected}]))"
+}
+.plotspec-button.menu add command -label "Lower selected points" -command {
+    tolisp "(lower-selected-points-from-mds-window $lisp_tk_stream_number '([.c find withtag {currentlySelected}]))"
+}
+
+
+
+###----------------------------------------------------------------------
+###                       setting plot spec data
+###----------------------------------------------------------------------
+
+menubutton .change-plotspec-button -bitmap @$bitmapDir/plot-spec.xbm -direction right -menu .change-plotspec-button.menu -relief raised
+menu .change-plotspec-button.menu -tearoff 0
+
+.change-plotspec-button.menu add command -label "transparent" -command {
+    tolisp "(set-plot-spec-data-from-mds-window $lisp_tk_stream_number \#'get-coords-colors \#'set-coords-colors \"{}\" '([.c find withtag {currentlySelected}]))"
+}
+.change-plotspec-button.menu add command -label "blue" -command {
+    tolisp "(set-plot-spec-data-from-mds-window $lisp_tk_stream_number \#'get-coords-colors \#'set-coords-colors 'blue '([.c find withtag {currentlySelected}]))"
+}
+.change-plotspec-button.menu add command -label "red" -command {
+    tolisp "(set-plot-spec-data-from-mds-window $lisp_tk_stream_number \#'get-coords-colors \#'set-coords-colors 'red '([.c find withtag {currentlySelected}]))"
+}
+.change-plotspec-button.menu add command -label "green" -command {
+    tolisp "(set-plot-spec-data-from-mds-window $lisp_tk_stream_number \#'get-coords-colors \#'set-coords-colors 'green '([.c find withtag {currentlySelected}]))"
+}
+.change-plotspec-button.menu add command -label "black" -command {
+    tolisp "(set-plot-spec-data-from-mds-window $lisp_tk_stream_number \#'get-coords-colors \#'set-coords-colors 'black '([.c find withtag {currentlySelected}]))"
+}
+.change-plotspec-button.menu add command -label "#ff003d" -command {
+    tolisp "(set-plot-spec-data-from-mds-window $lisp_tk_stream_number \#'get-coords-colors \#'set-coords-colors \"#ff003d\" '([.c find withtag {currentlySelected}]))"
+}
+.change-plotspec-button.menu add command -label "#ebff00" -command {
+    tolisp "(set-plot-spec-data-from-mds-window $lisp_tk_stream_number \#'get-coords-colors \#'set-coords-colors \"#ebff00\" '([.c find withtag {currentlySelected}]))"
+}
+.change-plotspec-button.menu add command -label "#00ff66" -command {
+    tolisp "(set-plot-spec-data-from-mds-window $lisp_tk_stream_number \#'get-coords-colors \#'set-coords-colors \"#00ff66\" '([.c find withtag {currentlySelected}]))"
+}
+.change-plotspec-button.menu add command -label "#0047ff" -command {
+    tolisp "(set-plot-spec-data-from-mds-window $lisp_tk_stream_number \#'get-coords-colors \#'set-coords-colors \"#0047ff\" '([.c find withtag {currentlySelected}]))"
+}
+.change-plotspec-button.menu add command -label "#ff00f5" -command {
+    tolisp "(set-plot-spec-data-from-mds-window $lisp_tk_stream_number \#'get-coords-colors \#'set-coords-colors \"#ff00f5\" '([.c find withtag {currentlySelected}]))"
+}
+.change-plotspec-button.menu add command -label "#ff5c00" -command {
+    tolisp "(set-plot-spec-data-from-mds-window $lisp_tk_stream_number \#'get-coords-colors \#'set-coords-colors \"#ff5c00\" '([.c find withtag {currentlySelected}]))"
+}
+.change-plotspec-button.menu add command -label "#51ff00" -command {
+    tolisp "(set-plot-spec-data-from-mds-window $lisp_tk_stream_number \#'get-coords-colors \#'set-coords-colors \"#51ff00\" '([.c find withtag {currentlySelected}]))"
+}
+.change-plotspec-button.menu add command -label "#00ffff" -command {
+    tolisp "(set-plot-spec-data-from-mds-window $lisp_tk_stream_number \#'get-coords-colors \#'set-coords-colors \"#00ffff\" '([.c find withtag {currentlySelected}]))"
+}
+.change-plotspec-button.menu add command -label "#5100ff" -command {
+    tolisp "(set-plot-spec-data-from-mds-window $lisp_tk_stream_number \#'get-coords-colors \#'set-coords-colors \"#5100ff\" '([.c find withtag {currentlySelected}]))"
+}
+.change-plotspec-button.menu add command -label "#ff005c" -command {
+    tolisp "(set-plot-spec-data-from-mds-window $lisp_tk_stream_number \#'get-coords-colors \#'set-coords-colors \"#ff005c\" '([.c find withtag {currentlySelected}]))"
+}
+.change-plotspec-button.menu add command -label "#fff500" -command {
+    tolisp "(set-plot-spec-data-from-mds-window $lisp_tk_stream_number \#'get-coords-colors \#'set-coords-colors \"#fff500\" '([.c find withtag {currentlySelected}]))"
+}
+.change-plotspec-button.menu add command -label "#00ff47" -command {
+    tolisp "(set-plot-spec-data-from-mds-window $lisp_tk_stream_number \#'get-coords-colors \#'set-coords-colors \"#00ff47\" '([.c find withtag {currentlySelected}]))"
+}
+.change-plotspec-button.menu add command -label "#0066ff" -command {
+    tolisp "(set-plot-spec-data-from-mds-window $lisp_tk_stream_number \#'get-coords-colors \#'set-coords-colors \"#0066ff\" '([.c find withtag {currentlySelected}]))"
+}
+.change-plotspec-button.menu add command -label "#eb00ff" -command {
+    tolisp "(set-plot-spec-data-from-mds-window $lisp_tk_stream_number \#'get-coords-colors \#'set-coords-colors \"#eb00ff\" '([.c find withtag {currentlySelected}]))"
+}
+.change-plotspec-button.menu add command -label "#ff3d00" -command {
+    tolisp "(set-plot-spec-data-from-mds-window $lisp_tk_stream_number \#'get-coords-colors \#'set-coords-colors \"#ff3d00\" '([.c find withtag {currentlySelected}]))"
+}
+.change-plotspec-button.menu add command -label "#70ff00" -command {
+    tolisp "(set-plot-spec-data-from-mds-window $lisp_tk_stream_number \#'get-coords-colors \#'set-coords-colors \"#70ff00\" '([.c find withtag {currentlySelected}]))"
+}
+.change-plotspec-button.menu add command -label "#00ffe1" -command {
+    tolisp "(set-plot-spec-data-from-mds-window $lisp_tk_stream_number \#'get-coords-colors \#'set-coords-colors \"#00ffe1\" '([.c find withtag {currentlySelected}]))"
+}
+.change-plotspec-button.menu add command -label "#3300ff" -command {
+    tolisp "(set-plot-spec-data-from-mds-window $lisp_tk_stream_number \#'get-coords-colors \#'set-coords-colors \"#3300ff\" '([.c find withtag {currentlySelected}]))"
+}
+.change-plotspec-button.menu add command -label "#ff007a" -command {
+    tolisp "(set-plot-spec-data-from-mds-window $lisp_tk_stream_number \#'get-coords-colors \#'set-coords-colors \"#ff007a\" '([.c find withtag {currentlySelected}]))"
+}
+.change-plotspec-button.menu add command -label "#ffd700" -command {
+    tolisp "(set-plot-spec-data-from-mds-window $lisp_tk_stream_number \#'get-coords-colors \#'set-coords-colors \"#ffd700\" '([.c find withtag {currentlySelected}]))"
+}
+.change-plotspec-button.menu add command -label "#00ff28" -command {
+    tolisp "(set-plot-spec-data-from-mds-window $lisp_tk_stream_number \#'get-coords-colors \#'set-coords-colors \"#00ff28\" '([.c find withtag {currentlySelected}]))"
+}
+.change-plotspec-button.menu add command -label "#0085ff" -command {
+    tolisp "(set-plot-spec-data-from-mds-window $lisp_tk_stream_number \#'get-coords-colors \#'set-coords-colors \"#0085ff\" '([.c find withtag {currentlySelected}]))"
+}
+.change-plotspec-button.menu add command -label "#cc00ff" -command {
+    tolisp "(set-plot-spec-data-from-mds-window $lisp_tk_stream_number \#'get-coords-colors \#'set-coords-colors \"#cc00ff\" '([.c find withtag {currentlySelected}]))"
+}
+.change-plotspec-button.menu add command -label "#ff1e00" -command {
+    tolisp "(set-plot-spec-data-from-mds-window $lisp_tk_stream_number \#'get-coords-colors \#'set-coords-colors \"#ff1e00\" '([.c find withtag {currentlySelected}]))"
+}
+.change-plotspec-button.menu add command -label "#8fff00" -command {
+    tolisp "(set-plot-spec-data-from-mds-window $lisp_tk_stream_number \#'get-coords-colors \#'set-coords-colors \"#8fff00\" '([.c find withtag {currentlySelected}]))"
+}
+.change-plotspec-button.menu add command -label "#00ffc2" -command {
+    tolisp "(set-plot-spec-data-from-mds-window $lisp_tk_stream_number \#'get-coords-colors \#'set-coords-colors \"#00ffc2\" '([.c find withtag {currentlySelected}]))"
+}
+.change-plotspec-button.menu add command -label "#1400ff" -command {
+    tolisp "(set-plot-spec-data-from-mds-window $lisp_tk_stream_number \#'get-coords-colors \#'set-coords-colors \"#1400ff\" '([.c find withtag {currentlySelected}]))"
+}
+.change-plotspec-button.menu add command -label "#ff0099" -command {
+    tolisp "(set-plot-spec-data-from-mds-window $lisp_tk_stream_number \#'get-coords-colors \#'set-coords-colors \"#ff0099\" '([.c find withtag {currentlySelected}]))"
+}
+.change-plotspec-button.menu add command -label "#ffb800" -command {
+    tolisp "(set-plot-spec-data-from-mds-window $lisp_tk_stream_number \#'get-coords-colors \#'set-coords-colors \"#ffb800\" '([.c find withtag {currentlySelected}]))"
+}
+.change-plotspec-button.menu add command -label "#00ff0a" -command {
+    tolisp "(set-plot-spec-data-from-mds-window $lisp_tk_stream_number \#'get-coords-colors \#'set-coords-colors \"#00ff0a\" '([.c find withtag {currentlySelected}]))"
+}
+.change-plotspec-button.menu add command -label "#00a3ff" -command {
+    tolisp "(set-plot-spec-data-from-mds-window $lisp_tk_stream_number \#'get-coords-colors \#'set-coords-colors \"#00a3ff\" '([.c find withtag {currentlySelected}]))"
+}
+.change-plotspec-button.menu add command -label "#ae00ff" -command {
+    tolisp "(set-plot-spec-data-from-mds-window $lisp_tk_stream_number \#'get-coords-colors \#'set-coords-colors \"#ae00ff\" '([.c find withtag {currentlySelected}]))"
+}
+.change-plotspec-button.menu add command -label "#ff0000" -command {
+    tolisp "(set-plot-spec-data-from-mds-window $lisp_tk_stream_number \#'get-coords-colors \#'set-coords-colors \"#ff0000\" '([.c find withtag {currentlySelected}]))"
+}
+.change-plotspec-button.menu add command -label "#aeff00" -command {
+    tolisp "(set-plot-spec-data-from-mds-window $lisp_tk_stream_number \#'get-coords-colors \#'set-coords-colors \"#aeff00\" '([.c find withtag {currentlySelected}]))"
+}
+
+
+###----------------------------------------------------------------------
+###                          Landscapes
+###----------------------------------------------------------------------
+
+
+
+proc landscapeTableOntoSaveOld {} {
+  global initialDir initialFile lisp_tk_stream_number
+
+  set types {
+    {"Table files"		{.txt .hi}}
+    {"All files"		*}}
+  set table [tk_getOpenFile -title "Table to landscape on this map" -filetypes $types -initialdir $initialDir]
+  if {![string match $table ""]} {
+    set file [lindex $table 1]
+    set fileComponents [split $file /] ;# will this work under MSwindows?
+    set initialDir [join [lrange $fileComponents 0 [expr [llength $fileComponents] - 2]] "/"]
+
+    tolisp "(landscape-table-sera-from-mds-window $lisp_tk_stream_number \"$table\")"
+  }
+}
+
+
+proc landscapeTableOntoSave {} {
+  global initialDir initialFile lisp_tk_stream_number
+
+  set types {
+    {"Table files"		{.txt .hi}}
+    {"All files"		*}}
+  set table [tk_getOpenFile -title "Table to landscape on this map" -filetypes $types -initialdir $initialDir]
+  if {![string match $table ""]} {
+    set file [lindex $table 1]
+    set fileComponents [split $file /] ;# will this work under MSwindows?
+    set initialDir [join [lrange $fileComponents 0 [expr [llength $fileComponents] - 2]] "/"]
+
+    set types {
+      {"Sera color files"	{.colors}}
+      {"All files"		*}}
+    set colors [tk_getOpenFile -title "Colors for landscapes (one color for each serum)" -filetypes $types -initialdir $initialDir]
+    if {![string match $table ""]} {
+      set file [lindex $colors 1]
+      set fileComponents [split $file /] ;# will this work under MSwindows?
+      set initialDir [join [lrange $fileComponents 0 [expr [llength $fileComponents] - 2]] "/"]
+
+      tolisp "(landscape-table-sera-from-mds-window $lisp_tk_stream_number \"$table\" \"$colors\")"
+    }
+  }
+}
+
+
+
+menubutton .landscape-button -bitmap @$bitmapDir/landscape.xbm -direction right -menu .landscape-button.menu -relief raised
+menu .landscape-button.menu -tearoff 0
+
+.landscape-button.menu add command -label "Landscape map sera (all or selected)"     -command {
+  tolisp "(landscape-sera-from-mds-window $lisp_tk_stream_number :canvas-ids '([.c find withtag {currentlySelected}]))"
+}
+.landscape-button.menu add command -label "Landscape table sera onto map"     -command {
+  landscapeTableOntoSave 
+}
+
+
+###----------------------------------------------------------------------
+###                       rule and coords
+###----------------------------------------------------------------------
+
+proc remove {e l} {
+	set position [lsearch -exact $l $e]
+	if {($position == -1)} \
+		{return $l} \
+	else {return [concat [lrange $l 0 [expr $position-1]] \
+			     [lrange $l [expr $position+1] [llength $l]]]}
+}
+
+proc euclidean_distance {x1 y1 x2 y2} {
+    return [expr round(sqrt(($x1-$x2)*($x1-$x2) + ($y1-$y2)*($y1-$y2)))]
+}
+
+proc halfway {a b} {
+    set ans [expr abs(($a-$b)/2)]
+    if $a<$b {set ans [expr $a+$ans]} else {set ans [expr $b+$ans]}
+    return $ans		
+}
+
+proc ruleLength {x1 y1 x2 y2} {
+    global canvasToMdsScaleFactor
+    return [expr round (10 * ($canvasToMdsScaleFactor * [euclidean_distance $x1 $y1 $x2 $y2])) / 10.0]
+}
+
+set ruleIds {}
+
+proc mkRule {x1 y1 x2 y2} {
+    global ruleTextId ruleTextBgId ruleIds
+    set ruleId [.c create line $x1 $y1 $x2 $y2 -arrow both -tag rule -fill red]
+    set x [halfway $x1 $x2]
+    set y [halfway $y1 $y2]
+    set ruleTextBgId($ruleId) [.c create oval [expr $x-10] [expr $y-10] [expr $x+10] [expr $y+10] -outline #ffffff -fill #ffffff]
+    set ruleTextId($ruleId) [.c create text $x $y -text [ruleLength $x1 $y1 $x2 $y2] -font "courier 10"]
+    set ruleIds [lappend ruleIds $ruleId]
+    return $ruleId
+}
+
+proc mvRule {ruleId x1 y1 x2 y2} {
+    global ruleTextId ruleTextBgId
+    .c coords $ruleId $x1 $y1 $x2 $y2
+    set ruleCoords($ruleId) {$x1 $y1 $x2 $y2}
+    set x [halfway $x1 $x2]
+    set y [halfway $y1 $y2]
+    .c coords $ruleTextId($ruleId) $x $y
+    #    .c itemconf $ruleTextId($ruleId) -text [ruleLength $x1 $y1 $x2 $y2]
+    updateRuleLength $ruleId
+    .c coords $ruleTextBgId($ruleId) [expr $x-10] [expr $y-10] [expr $x+10] [expr $y+10]
+}
+
+# nexted like this below as when there is a small rule, somehow problems with all pieces existing
+proc rmRule {ruleId} {
+    global ruleTextId ruleTextBgId ruleIds
+    if {[info exists ruleId]} {
+	.c delete $ruleId
+	set ruleIds [remove $ruleId $ruleIds]
+	tolisp "(print (list $ruleIds))"
+	if {[info exists ruleTextId($ruleId)]} {
+	    .c delete $ruleTextId($ruleId)
+	    if {[info exists ruleTextBgId($ruleId)]} {
+		.c delete $ruleTextBgId($ruleId)
+	    }
+	}
+    }
+}
+
+
+proc updateRuleLength {ruleId} {
+    global ruleTextId
+    set coords [.c coords $ruleId]
+    .c itemconf $ruleTextId($ruleId) -text [ruleLength [lindex $coords 0] [lindex $coords 1] [lindex $coords 2] [lindex $coords 3]]
+}
+
+proc set-canvasToMdsScaleFactor-and-update-rules {scaleFactor} {
+    global canvasToMdsScaleFactor ruleIds
+    set canvasToMdsScaleFactor $scaleFactor
+    foreach ruleId $ruleIds {
+	updateRuleLength $ruleId
+    }
+}
+
+
+###----------------------------------------------------------------------
+###                  SAVE TO A FILE and READ FROM FILE
+###----------------------------------------------------------------------
+
+set initialDir "mds/investigations/"
+set initialFile ""   ;# unfortunately not accepted by tk_getOpenFile (why?)
+
+proc getSaveFilenameWithType {title types} {
+  ;# unfortunately -parent does not seem to work so the window is created in the middle
+  ;# of the screen.  and -initialFile does not apply for getOpenFile.  
+  global initialDir initialFile 
+
+  set file [tk_getSaveFile -title $title -filetypes $types -initialdir $initialDir]
+
+  if {![string match $file ""]} {
+    # set defaults for the next access 
+    set fileComponents [split $file /] ;# will this work under MSwindows?
+    set initialFile [lindex $fileComponents [expr [llength $fileComponents]-1]]
+    set initialDir [string range $file 0 [expr [string length $file]-[string length $initialFile]-1]]
+  }
+
+  return $file
+}
+
+proc getSaveFilename {title} {
+  getSaveFilenameWithType $title {{"Save files"	{*.save}} {"All files" *}}
+}
+
+proc getOpenFilenameWithType {title types} {
+  ;# unfortunately -parent does not seem to work so the window is created in the middle
+  ;# of the screen.  and -initialFile does not apply for getOpenFile.  
+  global initialDir initialFile 
+
+  set file [tk_getOpenFile -title $title -filetypes $types -initialdir $initialDir]
+
+  if {![string match $file ""]} {
+    # set defaults for the next access 
+    set fileComponents [split $file /] ;# will this work under MSwindows?
+    set initialFile [lindex $fileComponents [expr [llength $fileComponents]-1]]
+    set initialDir [string range $file 0 [expr [string length $file]-[string length $initialFile]-1]]
+  }
+
+  return $file
+}
+
+proc getOpenFilename {title} {
+  getOpenFilenameWithType $title {{"Save files"	{*.save}} {"All files" *}}
+}
+
+
+###----------------------------------------------------------------------
+###                       SAVE CONFIGURATION
+###----------------------------------------------------------------------
+
+menubutton .save-button -bitmap @$bitmapDir/save.xbm -direction right -menu .save-button.menu -relief raised
+menu .save-button.menu -tearoff 0
+
+.save-button.menu add command -label "save format (all or selected points)" -command {
+    tolisp "(set-canvas-size-info $lisp_tk_stream_number '[wm geometry .])"
+    set filename [getSaveFilename "Enter filename in which to save table of all (or selected) points"]
+    if {(!($filename == ""))} {
+	if {([.c find withtag {currentlySelected}] == "")} {
+	    tolisp "(save-configuration-from-mds-window $lisp_tk_stream_number \"$filename\")"
+	} else {
+	    tolisp "(output-table-extract $lisp_tk_stream_number \"$filename\" '([.c find withtag {currentlySelected}]))"
+	}
+    }
+}
+
+.save-button.menu add command -label "save format (all sera and selected antigens)" -command {
+    tolisp "(set-canvas-size-info $lisp_tk_stream_number '[wm geometry .])"
+    set filename [getSaveFilename "Enter filename in which to save table of all sera and selected antigens"]
+    if {(!($filename == "")) && (!([.c find withtag {currentlySelected}] == ""))} {
+	tolisp "(output-table-extract $lisp_tk_stream_number \"$filename\" '([.c find withtag {currentlySelected}]) :include-all-sera t)"
+    }
+}
+
+.save-button.menu add command -label "save format (all antigens and selected sera)" -command {
+    tolisp "(set-canvas-size-info $lisp_tk_stream_number '[wm geometry .])"
+    set filename [getSaveFilename "Enter filename in which to save table of all antigens and selected sera"]
+    if {(!($filename == "")) && (!([.c find withtag {currentlySelected}] == ""))} {
+	tolisp "(output-table-extract $lisp_tk_stream_number \"$filename\" '([.c find withtag {currentlySelected}]) :include-all-antigens t)"
+    }
+}
+
+.save-button.menu add command -label "save format (selected (or all) ags, exclude sera)" -command {
+    tolisp "(set-canvas-size-info $lisp_tk_stream_number '[wm geometry .])"
+    set filename [getSaveFilename "Enter filename in which to save table excluding sera"]
+    if {(!($filename == ""))} {
+	tolisp "(output-table-extract $lisp_tk_stream_number \"$filename\" '([.c find withtag {currentlySelected}]) :exclude-all-sera t)"
+    }
+}
+
+.save-button.menu add command -label "Save without maps for reopening in different number of dimensions" -command {
+    set filename [getSaveFilename "Enter filename"]
+    if {!($filename == "")} {
+
+      set w .filebox
+      toplevel $w
+      wm title $w "Enter new number of dimensions"
+
+      entry $w.upto-n-mutations-entry -width 5 -justify left
+      $w.upto-n-mutations-entry insert 0 "3"
+      label $w.upto-n-mutations-label -text "New number of dimensions:" -anchor w
+      pack $w.upto-n-mutations-label -in $w -side left -fill x
+      pack $w.upto-n-mutations-entry -in $w -side left -fill x
+
+      frame $w.buttons
+      pack $w.buttons -side bottom -fill x -pady 2m
+      button $w.buttons.dismiss -text Done -command {
+      if {([.filebox.upto-n-mutations-entry get] != "")} {
+       toLisp "(save-configuration-from-mds-window $lisp_tk_stream_number \"$filename\" :change-to-num-dimensions \'[.filebox.upto-n-mutations-entry get])"
+      destroy .filebox
+      } 
+    } 
+    button $w.buttons.cancel -text Cancel -command {
+      destroy .filebox
+    }
+    pack $w.buttons.cancel -side left -expand 1
+    pack $w.buttons.dismiss -side right -expand 1
+    }
+}
+
+.save-button.menu add command -label "(HI) Table (all or selected points (remember to select sera too))" -command {
+    set filename [getSaveFilename "Enter filename in which to save the (HI) table"]
+    if {!($filename == "")} {
+	tolisp "(save-hi-table-from-mds-window $lisp_tk_stream_number \"$filename\" :currently-selected-point-canvas-ids '([.c find withtag {currentlySelected}]))"
+    }
+}
+
+.save-button.menu add command -label "(HI) Table (selected ags and all sera)" -command {
+    set filename [getSaveFilename "Enter filename in which to save the (HI) table"]
+    if {!($filename == "")} {
+	tolisp "(save-hi-table-from-mds-window $lisp_tk_stream_number \"$filename\" :currently-selected-point-canvas-ids '([.c find withtag {currentlySelected}]) :include-all-sera t)"
+    }
+}
+
+.save-button.menu add command -label "(HI) Table (selected sera and all antigens)" -command {
+    set filename [getSaveFilename "Enter filename in which to save the (HI) table"]
+    if {!($filename == "")} {
+	tolisp "(save-hi-table-from-mds-window $lisp_tk_stream_number \"$filename\" :currently-selected-point-canvas-ids '([.c find withtag {currentlySelected}]) :include-all-antigens t)"
+    }
+}
+
+.save-button.menu add command -label "sfi format" -command {
+    set filename [getSaveFilename "Enter filename in which to save configuration in SFI format"]
+    if {!($filename == "")} {
+	tolisp "(save-lapedes-format-from-mds-window $lisp_tk_stream_number \"$filename\")"
+    }
+}
+
+.save-button.menu add command -label "plot spec" -command {
+    set filename [getSaveFilename "Enter filename in which to save the plot specification"]
+    if {!($filename == "")} {
+	tolisp "(save-plot-spec-from-mds-window $lisp_tk_stream_number \"$filename\")"
+    }
+}
+
+# ------------------------------ phylip ------------------------------------
+.save-button.menu add command -label "phylip matrix" -command {
+    set filename [getSaveFilename "Enter filename in which to save phylip matrix"]
+    if {!($filename == "")} {
+	tolisp "(output-phylip-matrix-from-mds-window $lisp_tk_stream_number \"$filename\")"
+    }
+}
+.save-button.menu add command -label "phylip matrix (every 4th)" -command {
+    set filename [getSaveFilename "Enter filename in which to save phylip matrix (for every 4th entry)"]
+    if {!($filename == "")} {
+	tolisp "(output-phylip-matrix-from-mds-window $lisp_tk_stream_number \"$filename\" :enths 4)"
+    }
+}
+.save-button.menu add command -label "phylip matrix (normalize max distance to 1.0)" -command {
+    set filename [getSaveFilename "Enter filename in which to save phylip matrix (normalize max distance to 1.0)"]
+    if {!($filename == "")} {
+	tolisp "(output-phylip-matrix-from-mds-window $lisp_tk_stream_number \"$filename\" :normalize-to-max-distance-of-one t)"
+    }
+}
+.save-button.menu add command -label "phylip matrix (every 4th) (normalize max distance to 1.0)" -command {
+    set filename [getSaveFilename "Enter filename in which to save phylip matrix (for every 4th entry) (normalize max distance to 1.0)"]
+    if {!($filename == "")} {
+	tolisp "(output-phylip-matrix-from-mds-window $lisp_tk_stream_number \"$filename\" :enths 4 :normalize-to-max-distance-of-one t)"
+    }
+}
+
+.save-button.menu add command -label "distances from map" -command {
+    set filename [getSaveFilename "Enter filename in which to save distances (this may take a while...)"]
+    if {!($filename == "")} {
+	tolisp "(output-names-and-distances $lisp_tk_stream_number \"$filename\")"
+    }
+}
+
+
+.save-button.menu add command -label "distances from table" -command {
+    set filename [getSaveFilename "Enter filename in which to save distances (this may take a while...)"]
+    if {!($filename == "")} {
+	tolisp "(output-names-and-distances-from-table $lisp_tk_stream_number \"$filename\")"
+    }
+}
+
+.save-button.menu add command -label "distances from table and map" -command {
+    set filename [getSaveFilename "Enter filename in which to save distances (this may take a while...)"]
+    if {!($filename == "")} {
+	tolisp "(output-names-and-distances-from-table-and-map $lisp_tk_stream_number \"$filename\")"
+    }
+}
+
+.save-button.menu add command -label "predictions" -command {
+    set filename [getSaveFilename "Enter filename in which to save predictions"]
+    if {!($filename == "")} {
+	tolisp "(output-predictions $lisp_tk_stream_number \"$filename\")"
+    }
+}
+
+.save-button.menu add command -label "strain names (all or selected strains)" -command {
+    set filename [getSaveFilename "Enter filename in which to save strain names of all (or selected) points"]
+    if {(!($filename == ""))} {
+	tolisp "(output-names $lisp_tk_stream_number \"$filename\" '([.c find withtag {currentlySelected}]))"
+    }
+}
+
+.save-button.menu add command -label "strain names and coordss (all or selected strains)" -command {
+    set filename [getSaveFilename "Enter filename in which to save strain names and coordss of all (or selected) points"]
+    if {(!($filename == ""))} {
+	tolisp "(output-names-and-coordss-from-mds-window $lisp_tk_stream_number \"$filename\" '([.c find withtag {currentlySelected}]))"
+    }
+}
+
+.save-button.menu add command -label "strain names, coordss, and bases/adjusts (all or selected strains)" -command {
+    set filename [getSaveFilename "Enter filename in which to save strain names, coordss, and bases/adjusts of all (or selected) points"]
+    if {(!($filename == ""))} {
+	tolisp "(output-names-coordss-and-bases-adjusts-from-mds-window $lisp_tk_stream_number \"$filename\" '([.c find withtag {currentlySelected}]))"
+    }
+}
+
+# .save-button.menu add command -label "Pymol format (all or selected strains) (should have a .pml extension)" -command {
+#     set filename [getSaveFilenameWithType \
+#                    "Enter filename in which to save Pymol data (should have a .pml extension)" \
+#                    {{"Pymol files" {*.pml}} {"All files" *}} \
+#                  ]
+#     if {(!($filename == ""))} {
+# 	tolisp "(output-pymol-format-from-mds-window $lisp_tk_stream_number \"$filename\" '([.c find withtag {currentlySelected}]) :if-exists :supersede)"
+#     }
+# }
+
+.save-button.menu add command -label "Distances through clusters" -command {
+    distancesThroughClusters
+}
+
+
+###----------------------------------------------------------------------
+###                     DISTANCES THROUGH CLUSTERS
+###----------------------------------------------------------------------
+
+proc fileDialog {w ent operation types} {
+    if {$operation == "open"} {
+	set file [tk_getOpenFile -filetypes $types -parent $w]
+    } else {
+	set file [tk_getSaveFile -filetypes $types -parent $w \
+	    -initialfile Untitled -defaultextension .txt]
+    }
+    if {[string compare $file ""]} {
+	$ent delete 0 end
+	$ent insert 0 $file
+	$ent xview end
+    }
+}
+
+proc distancesThroughClusters {} {
+
+  set w .filebox
+  toplevel $w
+  wm title $w "Cluster distance calculations"
+
+  label $w.msg -justify left -text "Cluser distance calculations."
+  pack $w.msg -side top
+
+  set f [frame $w.opencluster]
+  label $f.lab -text "Select cluster file: " -anchor e
+  entry $f.ent -width 20
+  button $f.but -text "Browse ..." -command "fileDialog $w $f.ent open {{\"All files\" *}}"
+  pack $f.lab -side left
+  pack $f.ent -side left -expand yes -fill x
+  pack $f.but -side left
+  pack $f -fill x -padx 1c -pady 3
+
+  set f [frame $w.outputfile]
+  label $f.lab -text "Select output file: " -anchor e
+  entry $f.ent -width 20
+  button $f.but -text "Browse ..." -command "fileDialog $w $f.ent save {{\"All files\" *}}"
+  pack $f.lab -side left
+  pack $f.ent -side left -expand yes -fill x
+  pack $f.but -side left
+  pack $f -fill x -padx 1c -pady 3
+
+  entry $w.root-antigenentry -width 30 -justify left
+  $w.root-antigenentry insert 0 "BI/16190/68-AG"
+  label $w.root-antigenlabel -text "Root antigen:" -anchor w
+  pack $w.root-antigenlabel -in $w -side left -fill x
+  pack $w.root-antigenentry -in $w -side left -fill x
+
+  checkbutton $w.clustersPlot -text "Show plot" -variable clustersPlot -onvalue 1 -offvalue 0
+  pack $w.clustersPlot -anchor c
+
+  frame $w.buttons
+  pack $w.buttons -side bottom -fill x -pady 2m
+  button $w.buttons.dismiss -text Done -command {
+    if {([.filebox.opencluster.ent get] != "") && ([.filebox.outputfile.ent get] != "")} {
+      toLisp "(year-by-year-distances :save-names-short (hi-table-antigens-short (get-hi-table (get-table-window-for-mds-window $lisp_tk_stream_number))) :save-coordss (get-mds-coordss $lisp_tk_stream_number) :clusters-or-filename \"[.filebox.opencluster.ent get]\" :output-stream \"[.filebox.outputfile.ent get]\" :root-strain \'[.filebox.root-antigenentry get] :show-plot (bit->bool $clustersPlot))"
+    destroy .filebox
+    }
+  }
+  button $w.buttons.cancel -text Cancel -command {
+    destroy .filebox
+  }
+  pack $w.buttons.cancel -side left -expand 1
+  pack $w.buttons.dismiss -side right -expand 1
+}
+
+
+###----------------------------------------------------------------------
+###                    FLIP ALL POINTS BY MOUSE
+###----------------------------------------------------------------------
+
+button .flipX -bitmap @$bitmapDir/flipX.xbm -command { 
+  set currentSelection [.c find withtag {currentlySelected}]
+  if {($currentSelection == "")} {
+      tolisp "(set-canvas-size-info $lisp_tk_stream_number '[wm geometry .])"
+      tolisp "(flip-all-coordss $lisp_tk_stream_number 'x)"
+  } else {
+      tolisp "(flip-coordss $lisp_tk_stream_number 'x :point-indices-subset (get-mds-point-indices-from-mds-window-canvas-ids $lisp_tk_stream_number '($currentSelection)))"
+  }
+}
+
+button .flipY -bitmap @$bitmapDir/flipY.xbm -command { 
+  set currentSelection [.c find withtag {currentlySelected}]
+  if {($currentSelection == "")} {
+      tolisp "(set-canvas-size-info $lisp_tk_stream_number '[wm geometry .])"
+      tolisp "(flip-all-coordss $lisp_tk_stream_number 'y)"
+  } else {
+      tolisp "(flip-coordss $lisp_tk_stream_number 'y :point-indices-subset (get-mds-point-indices-from-mds-window-canvas-ids $lisp_tk_stream_number '($currentSelection)))"
+  }
+}
+
+
+###----------------------------------------------------------------------
+###                       FILL WINDOW
+###----------------------------------------------------------------------
+
+button .fill-window -bitmap @$bitmapDir/fill-window.xbm -command {
+    tolisp "(set-canvas-size-info $lisp_tk_stream_number '[wm geometry .])"
+    tolisp "(enable-auto-scale-and-translate-but-not-rotate $lisp_tk_stream_number)"
+    tolisp "(fill-window $lisp_tk_stream_number)"
+}
+
+
+###----------------------------------------------------------------------
+###                    RANDOMIZING ALL COORDS
+###----------------------------------------------------------------------
+
+button .randomize-coordss-button -bitmap @$bitmapDir/randoms.xbm -command { 
+    tolisp "(set-canvas-size-info $lisp_tk_stream_number '[wm geometry .])"
+    if {([.c find withtag {currentlySelected}] == "")} {
+	tolisp "(randomize-all-coordss $lisp_tk_stream_number)"
+    } else {
+	foreach point [.c find withtag {currentlySelected}] {
+	    tolisp "(randomize-coords $lisp_tk_stream_number $point :display-update nil)"
+	}
+	tolisp "(display-update $lisp_tk_stream_number)"
+    }
+}
+
+#button .randomize-coordss-button -bitmap @$bitmapDir/randoms.xbm -command { 
+#  tolisp "(randomize-all-coordss $lisp_tk_stream_number nil)"
+#}
+
+bind .randomize-coordss-button <Button-3> {
+    tolisp "(set-canvas-size-info $lisp_tk_stream_number '[wm geometry .])"
+    if {([.c find withtag {currentlySelected}] == "")} {
+	tolisp "(randomize-all-coordss-a-little $lisp_tk_stream_number :amount 0.5)"
+    } else {
+	foreach point [.c find withtag {currentlySelected}] {
+	    tolisp "(randomize-coords $lisp_tk_stream_number $point :amount 0.5 :display-update nil)"
+	}
+	tolisp "(display-update $lisp_tk_stream_number)"
+    }
+}
+
+bind .randomize-coordss-button <Button-2> {
+  tolisp "(set-canvas-size-info $lisp_tk_stream_number '[wm geometry .])"
+  tolisp "(starting-configuration-all-coordss $lisp_tk_stream_number)"
+}
+
+
+###----------------------------------------------------------------------
+###                        HILLCLIMB
+###----------------------------------------------------------------------
+
+button .hillclimb-button -bitmap @$bitmapDir/hillclimb.xbm -command {
+  tolisp "(set-canvas-size-info $lisp_tk_stream_number '[wm geometry .])"
+  tolisp "(hillclimb-from-mds-window $lisp_tk_stream_number nil 100)"
+#  tolisp "(hillclimb-from-mds-window $lisp_tk_stream_number nil 1)"
+}
+
+bind .hillclimb-button <Control-Button-1> {
+  ;# we get this then the button-1 above (so both number of climbs added together)
+  tolisp "(set-canvas-size-info $lisp_tk_stream_number '[wm geometry .])"
+  tolisp "(hillclimb-from-mds-window $lisp_tk_stream_number nil 900)"
+}
+
+bind .hillclimb-button <Shift-Button-1> {
+  ;# we get this then the button-1 above (so both number of climbs added together)
+  tolisp "(set-canvas-size-info $lisp_tk_stream_number '[wm geometry .])"
+  tolisp "(hillclimb-from-mds-window $lisp_tk_stream_number nil 1000000)"
+}
+
+bind .hillclimb-button <Control-Shift-Button-1> {
+  ;# we get this then the button-1 above (so both number of climbs added together)
+  tolisp "(set-canvas-size-info $lisp_tk_stream_number '[wm geometry .])"
+  tolisp "(hillclimb-from-mds-window-multiple $lisp_tk_stream_number nil 1000000)"
+}
+
+bind .hillclimb-button <Button-3> {
+  ;# we get this then the button-1 above (so both number of climbs added together)
+  tolisp "(set-canvas-size-info $lisp_tk_stream_number '[wm geometry .])"
+#  tolisp "(hillclimb-from-mds-window $lisp_tk_stream_number nil 100 20)"
+  tolisp "(hillclimb-from-mds-window $lisp_tk_stream_number nil 5)"
+}
+
+bind .hillclimb-button <Control-Button-3> {
+  ;# we get this then the button-1 above (so both number of climbs added together)
+  tolisp "(set-canvas-size-info $lisp_tk_stream_number '[wm geometry .])"
+  tolisp "(hillclimb-from-mds-window $lisp_tk_stream_number nil 900 20)"
+}
+
+bind .hillclimb-button <Shift-Button-3> {
+  ;# we get this then the button-1 above (so both number of climbs added together)
+  tolisp "(set-canvas-size-info $lisp_tk_stream_number '[wm geometry .])"
+  tolisp "(hillclimb-from-mds-window $lisp_tk_stream_number nil 1000000 20)"
+}
+
+bind .hillclimb-button <Button-2> {
+  ;# just one iteration, for debugging
+  tolisp "(set-canvas-size-info $lisp_tk_stream_number '[wm geometry .])"
+  tolisp "(hillclimb-from-mds-window $lisp_tk_stream_number nil 1 20)"
+}
+
+button .hillclimb-in-new-window-button -bitmap @$bitmapDir/hillclimb-new-window.xbm -command { 
+  tolisp "(set-canvas-size-info $lisp_tk_stream_number '[wm geometry .])"
+  tolisp "(hillclimb-from-mds-window $lisp_tk_stream_number t 0)"
+}
+
+bind .hillclimb-in-new-window-button <Button-3> {
+#  tolisp "(xgobi-from-mds-window $lisp_tk_stream_number)"
+  tolisp "(pymol-display-from-mds-window $lisp_tk_stream_number)"
+}
+
+###----------------------------------------------------------------------
+###                       STOP HILLCLIMB
+###----------------------------------------------------------------------
+
+#problem with this is that the lisp process is so busy doing the mds
+#that the xfer from tk does not happen
+button .stop-hillclimb -bitmap @$bitmapDir/halt.xbm -command { 
+    tolisp "(stop-optimization $lisp_tk_stream_number)"
+}
+
+
+###----------------------------------------------------------------------
+###                   error/prediction/connection lines
+###----------------------------------------------------------------------
+
+menubutton .lines-button -bitmap @$bitmapDir/error-lines-errors.xbm -direction right -menu .lines-button.menu -relief raised
+menu .lines-button.menu -tearoff 0
+.lines-button.menu add command -label "error lines"       -command {tolisp "(set-line-state $lisp_tk_stream_number 'error-lines-only :selected-subset-canvas-ids '([.c find withtag {currentlySelected}]))"}
+.lines-button.menu add command -label "prediction lines"  -command {tolisp "(set-line-state $lisp_tk_stream_number 'prediction-lines-only :selected-subset-canvas-ids '([.c find withtag {currentlySelected}]))"}
+.lines-button.menu add command -label "connection lines"  -command {tolisp "(set-line-state $lisp_tk_stream_number 'connection-lines-only :selected-subset-canvas-ids '([.c find withtag {currentlySelected}]))"}
+.lines-button.menu add command -label "no lines"          -command {tolisp "(set-line-state $lisp_tk_stream_number 'nil)"}
+.lines-button.menu add command -label "stress color dots (average)"  -command {tolisp "(gui-set-show-stress-components $lisp_tk_stream_number 'average)"}
+.lines-button.menu add command -label "stress color dots (absolute)" -command {tolisp "(gui-set-show-stress-components $lisp_tk_stream_number 'absolute)"}
+.lines-button.menu add command -label "no stress color dots"         -command {tolisp "(gui-set-show-stress-components $lisp_tk_stream_number 'nil)"}
+
+
+
+###----------------------------------------------------------------------
+###                          procrustes
+###----------------------------------------------------------------------
+
+set kmeansHasRunAlready 0
+
+menubutton .procrustes-button -bitmap @$bitmapDir/procrustes.xbm -direction right -menu .procrustes-button.menu -relief raised
+menu .procrustes-button.menu -tearoff 0
+
+# without scaling
+.procrustes-button.menu add command -label "procrustes (without scaling) (all or selected points)"     -command {
+    set filename [getOpenFilename "Enter filename of a save to map onto current plot (without scaling)"]
+    if {!($filename == "")} {
+	if {([.c find withtag {currentlySelected}] == "")} {
+  	  tolisp "(map-save-on-to-mds-window $lisp_tk_stream_number \"$filename\" :scalep nil)"
+	} else {
+	  tolisp "(map-save-on-to-mds-window $lisp_tk_stream_number \"$filename\" :scalep nil :name-subset-by-indices (get-mds-point-indices-from-mds-window-canvas-ids $lisp_tk_stream_number '([.c find withtag {currentlySelected}])))"
+	}
+    }
+}
+
+.procrustes-button.menu add command -label "procrustes (without scaling) ag only (all or selected ags)"     -command {
+    set filename [getOpenFilename "Enter filename of a save to map onto current plot (without scaling) ag only"]
+    if {!($filename == "")} {
+    	if {([.c find withtag {currentlySelected}] == "")} {
+          tolisp "(map-save-on-to-mds-window $lisp_tk_stream_number \"$filename\" :scalep nil :ag-only t)"
+	} else {
+	  tolisp "(map-save-on-to-mds-window $lisp_tk_stream_number \"$filename\" :scalep nil :name-subset-by-indices (get-mds-point-indices-from-mds-window-canvas-ids $lisp_tk_stream_number '([.c find withtag {currentlySelected}])) :ag-only t)"
+	}
+    }
+}
+.procrustes-button.menu add command -label "procrustes (without scaling) sr only (all or selected sera)"     -command {
+    set filename [getOpenFilename "Enter filename of a save to map onto current plot (without scaling) sr only"]
+    if {!($filename == "")} {
+    	if {([.c find withtag {currentlySelected}] == "")} {
+          tolisp "(map-save-on-to-mds-window $lisp_tk_stream_number \"$filename\" :scalep nil :sr-only t)"
+	} else {
+	  tolisp "(map-save-on-to-mds-window $lisp_tk_stream_number \"$filename\" :scalep nil :name-subset-by-indices (get-mds-point-indices-from-mds-window-canvas-ids $lisp_tk_stream_number '([.c find withtag {currentlySelected}])) :sr-only t)"
+	}
+    }
+}
+
+# procrustes k-means 
+.procrustes-button.menu add command -label "kmeans (without scaling) color code 2 clades"  -command {
+    if {!($kmeansHasRunAlready)} {
+	set filename [getOpenFilename "Enter filename of a save to kmeans (without scaling) color code 2 clades"]
+    }
+    if {!($filename == "")} {
+	tolisp "(procrustes-kmeans-from-mds-window-color-code-clades $lisp_tk_stream_number :num-clusters 2 :save-or-file-name-of-slave-save \"$filename\" :iterations 10 :scalep nil)"
+    }
+}
+.procrustes-button.menu add command -label "kmeans (without scaling) procrustes 2 clades"  -command {
+    if {!($kmeansHasRunAlready)} {
+	set filename [getOpenFilename "Enter filename of a save kmeans (without scaling) procrustes 2 clades"]
+    }
+    if {!($filename == "")} {
+	tolisp "(procrustes-kmeans-from-mds-window-procrustes-clades $lisp_tk_stream_number \"$filename\" :num-clusters 2 :iterations 10 :scalep nil)"
+    }
+}
+.procrustes-button.menu add command -label "kmeans (without scaling) color code 3 clades"  -command {
+    if {!($kmeansHasRunAlready)} {
+	set filename [getOpenFilename "Enter filename of a save to kmeans (without scaling) color code 3 clades"]
+    }
+    if {!($filename == "")} {
+	tolisp "(procrustes-kmeans-from-mds-window-color-code-clades $lisp_tk_stream_number :save-or-file-name-of-slave-save \"$filename\" :num-clusters 3 :iterations 10 :scalep nil)"
+    }
+}
+.procrustes-button.menu add command -label "kmeans (without scaling) procrustes 3 clades"  -command {
+    if {!($kmeansHasRunAlready)} {
+	set filename [getOpenFilename "Enter filename of a save kmeans (without scaling) procrustes 3 clades"]
+    }
+    if {!($filename == "")} {
+	tolisp "(procrustes-kmeans-from-mds-window-procrustes-clades $lisp_tk_stream_number \"$filename\" :num-clusters 3 :iterations 10 :scalep nil)"
+    }
+}
+
+# with scaling
+.procrustes-button.menu add command -label "procrustes (with scaling) (all or selected points)"     -command {
+    set filename [getOpenFilename "Enter filename of a save to map onto current plot (with scaling)"]
+    if {!($filename == "")} {
+	if {([.c find withtag {currentlySelected}] == "")} {
+  	  tolisp "(map-save-on-to-mds-window $lisp_tk_stream_number \"$filename\" :scalep t)"
+	} else {
+	  tolisp "(map-save-on-to-mds-window $lisp_tk_stream_number \"$filename\" :scalep t :name-subset-by-indices (get-mds-point-indices-from-mds-window-canvas-ids $lisp_tk_stream_number '([.c find withtag {currentlySelected}])))"
+	}
+    }
+}
+
+.procrustes-button.menu add command -label "procrustes (with scaling) ag only (all or selected ags)"     -command {
+    set filename [getOpenFilename "Enter filename of a save to map onto current plot (with scaling) ag only "]
+    if {!($filename == "")} {
+    	if {([.c find withtag {currentlySelected}] == "")} {
+          tolisp "(map-save-on-to-mds-window $lisp_tk_stream_number \"$filename\" :scalep t :ag-only t)"
+	} else {
+	  tolisp "(map-save-on-to-mds-window $lisp_tk_stream_number \"$filename\" :scalep t :name-subset-by-indices (get-mds-point-indices-from-mds-window-canvas-ids $lisp_tk_stream_number '([.c find withtag {currentlySelected}])) :ag-only t)"
+	}
+    }
+}
+.procrustes-button.menu add command -label "procrustes (with scaling) sr only (all or selected sr)"     -command {
+    set filename [getOpenFilename "Enter filename of a save to map onto current plot (with scaling) sr only"]
+    if {!($filename == "")} {
+    	if {([.c find withtag {currentlySelected}] == "")} {
+          tolisp "(map-save-on-to-mds-window $lisp_tk_stream_number \"$filename\" :scalep t :sr-only t)"
+	} else {
+	  tolisp "(map-save-on-to-mds-window $lisp_tk_stream_number \"$filename\" :scalep t :name-subset-by-indices (get-mds-point-indices-from-mds-window-canvas-ids $lisp_tk_stream_number '([.c find withtag {currentlySelected}])) :sr-only t)"
+	}
+    }
+}
+
+# procrustes k-means 
+.procrustes-button.menu add command -label "kmeans (with scaling) color code 2 clades"  -command {
+    if {!($kmeansHasRunAlready)} {
+	set filename [getOpenFilename "Enter filename of a save to kmeans (with scaling) color code 2 clades"]
+    }
+    if {!($filename == "")} {
+	tolisp "(procrustes-kmeans-from-mds-window-color-code-clades $lisp_tk_stream_number :num-clusters 2 :save-or-file-name-of-slave-save \"$filename\" :iterations 10 :scalep t)"
+    }
+}
+.procrustes-button.menu add command -label "kmeans (with scaling) procrustes 2 clades"  -command {
+    if {!($kmeansHasRunAlready)} {
+	set filename [getOpenFilename "Enter filename of a save kmeans (with scaling) procrustes 2 clades"]
+    }
+    if {!($filename == "")} {
+	tolisp "(procrustes-kmeans-from-mds-window-procrustes-clades $lisp_tk_stream_number \"$filename\" :num-clusters 2 :iterations 10 :scalep t)"
+    }
+}
+.procrustes-button.menu add command -label "kmeans (with scaling) color code 3 clades"  -command {
+    if {!($kmeansHasRunAlready)} {
+	set filename [getOpenFilename "Enter filename of a save to kmeans (with scaling) color code 3 clades"]
+    }
+    if {!($filename == "")} {
+	tolisp "(procrustes-kmeans-from-mds-window-color-code-clades $lisp_tk_stream_number :save-or-file-name-of-slave-save \"$filename\" :num-clusters 3 :iterations 10 :scalep t)"
+    }
+}
+.procrustes-button.menu add command -label "kmeans (with scaling) procrustes 3 clades"  -command {
+    if {!($kmeansHasRunAlready)} {
+	set filename [getOpenFilename "Enter filename of a save kmeans (with scaling) procrustes 3 clades"]
+    }
+    if {!($filename == "")} {
+	tolisp "(procrustes-kmeans-from-mds-window-procrustes-clades $lisp_tk_stream_number \"$filename\" :num-clusters 3 :iterations 10 :scalep t)"
+    }
+}
+.procrustes-button.menu add command -label "remove procrustes data"  -command {
+    tolisp "(remove-procrustes-data $lisp_tk_stream_number)"
+}
+
+
+
+###----------------------------------------------------------------------
+###                 ORIENT TO SAVE (akin to procrustes)
+###----------------------------------------------------------------------
+
+menubutton .orient-button -bitmap @$bitmapDir/orient.xbm -direction right -menu .orient-button.menu -relief raised
+menu .orient-button.menu -tearoff 0
+
+# without scaling
+.orient-button.menu add command -label "orient (without scaling) (all or selected points)"     -command {
+    set filename [getOpenFilename "Enter filename of a save to which to orient current plot (without scaling)"]
+    if {!($filename == "")} {
+	if {([.c find withtag {currentlySelected}] == "")} {
+  	  tolisp "(reorient-mds-window-to-save $lisp_tk_stream_number \"$filename\" :scalep nil)"
+	} else {
+	  tolisp "(reorient-mds-window-to-save $lisp_tk_stream_number \"$filename\" :scalep nil :slave-indices (get-mds-point-indices-from-mds-window-canvas-ids $lisp_tk_stream_number '([.c find withtag {currentlySelected}])))"
+	}
+    }
+}
+
+.orient-button.menu add command -label "orient (without scaling) ag only"     -command {
+    set filename [getOpenFilename "Enter filename of a save to which to orient current plot (without scaling) ag only"]
+    if {!($filename == "")} {
+	tolisp "(reorient-mds-window-to-save $lisp_tk_stream_number \"$filename\" :scalep nil :name-subset 'ag-only)"
+    }
+}
+.orient-button.menu add command -label "orient (without scaling) sr only"     -command {
+    set filename [getOpenFilename "Enter filename of a save to which to orient current plot (without scaling) sr only"]
+    if {!($filename == "")} {
+	tolisp "(reorient-mds-window-to-save $lisp_tk_stream_number \"$filename\" :scalep nil :name-subset 'sr-only)"
+    }
+}
+
+
+# with scaling
+.orient-button.menu add command -label "orient (with scaling) (all or selected points)"     -command {
+    set filename [getOpenFilename "Enter filename of a save to which to orient current plot (with scaling)"]
+    if {!($filename == "")} {
+	if {([.c find withtag {currentlySelected}] == "")} {
+  	  tolisp "(reorient-mds-window-to-save $lisp_tk_stream_number \"$filename\" :scalep t)"
+	} else {
+	  tolisp "(reorient-mds-window-to-save $lisp_tk_stream_number \"$filename\" :scalep t :slave-indices (get-mds-point-indices-from-mds-window-canvas-ids $lisp_tk_stream_number '([.c find withtag {currentlySelected}])))"
+	}
+    }
+}
+
+.orient-button.menu add command -label "orient (with scaling) ag only"     -command {
+    set filename [getOpenFilename "Enter filename of a save to which to orient current plot (with scaling) ag only"]
+    if {!($filename == "")} {
+	tolisp "(reorient-mds-window-to-save $lisp_tk_stream_number \"$filename\" :scalep t :name-subset 'ag-only)"
+    }
+}
+.orient-button.menu add command -label "orient (with scaling) sr only"     -command {
+    set filename [getOpenFilename "Enter filename of a save to which to orient current plot (with scaling) sr only"]
+    if {!($filename == "")} {
+	tolisp "(reorient-mds-window-to-save $lisp_tk_stream_number \"$filename\" :scalep t :name-subset 'sr-only)"
+    }
+}
+
+
+
+###----------------------------------------------------------------------
+###                      CONSTANT FORCE LOCII
+###----------------------------------------------------------------------
+
+menubutton .constant-force-locii-button -bitmap @$bitmapDir/constant-force-locii.xbm -direction right -menu .constant-force-locii-button.menu -relief raised
+menu .constant-force-locii-button.menu -tearoff 0
+.constant-force-locii-button.menu add command -label "Calc data"     -command {
+    tolisp "(mds-window-set-constant-stress-radial-data $lisp_tk_stream_number)"
+}
+.constant-force-locii-button.menu add command -label "Show blobs 0.01"  -command {
+    tolisp "(mds-window-set-constant-stress-shapes $lisp_tk_stream_number :stress-delta 0.01)"
+}
+.constant-force-locii-button.menu add command -label "Show blobs 0.05"  -command {
+    tolisp "(mds-window-set-constant-stress-shapes $lisp_tk_stream_number :stress-delta 0.05)"
+}
+.constant-force-locii-button.menu add command -label "Show blobs 0.1"  -command {
+    tolisp "(mds-window-set-constant-stress-shapes $lisp_tk_stream_number :stress-delta 0.1)"
+}
+.constant-force-locii-button.menu add command -label "Show blobs 0.5"  -command {
+    tolisp "(mds-window-set-constant-stress-shapes $lisp_tk_stream_number :stress-delta 0.5)"
+}
+.constant-force-locii-button.menu add command -label "Show blobs 1.0"  -command {
+    tolisp "(mds-window-set-constant-stress-shapes $lisp_tk_stream_number :stress-delta 1.0)"
+}
+.constant-force-locii-button.menu add command -label "Show blobs 2.0"  -command {
+    tolisp "(mds-window-set-constant-stress-shapes $lisp_tk_stream_number :stress-delta 2.0)"
+}
+.constant-force-locii-button.menu add command -label "Show blobs 20"  -command {
+    tolisp "(mds-window-set-constant-stress-shapes $lisp_tk_stream_number :stress-delta 20.0)"
+}
+.constant-force-locii-button.menu add command -label "Show blobs 50"  -command {
+    tolisp "(mds-window-set-constant-stress-shapes $lisp_tk_stream_number :stress-delta 50.0)"
+}
+.constant-force-locii-button.menu add command -label "Show color-graded blobs 0.01"  -command {
+    tolisp "(mds-window-set-constant-stress-shapes-color-graded $lisp_tk_stream_number :stress-delta 0.01)"
+}
+.constant-force-locii-button.menu add command -label "Show color-graded blobs 0.05"  -command {
+    tolisp "(mds-window-set-constant-stress-shapes-color-graded $lisp_tk_stream_number :stress-delta 0.05)"
+}
+.constant-force-locii-button.menu add command -label "Show color-graded blobs 0.1"  -command {
+    tolisp "(mds-window-set-constant-stress-shapes-color-graded $lisp_tk_stream_number :stress-delta 0.1)"
+}
+.constant-force-locii-button.menu add command -label "Show color-graded blobs 0.5"  -command {
+    tolisp "(mds-window-set-constant-stress-shapes-color-graded $lisp_tk_stream_number :stress-delta 0.5)"
+}
+.constant-force-locii-button.menu add command -label "Show color-graded blobs 1.0"  -command {
+    tolisp "(mds-window-set-constant-stress-shapes-color-graded $lisp_tk_stream_number :stress-delta 1.0)"
+}
+.constant-force-locii-button.menu add command -label "Show color-graded blobs 2.0"  -command {
+    tolisp "(mds-window-set-constant-stress-shapes-color-graded $lisp_tk_stream_number :stress-delta 2.0)"
+}
+.constant-force-locii-button.menu add command -label "Show color-graded blobs 20"  -command {
+    tolisp "(mds-window-set-constant-stress-shapes-color-graded $lisp_tk_stream_number :stress-delta 20.0)"
+}
+.constant-force-locii-button.menu add command -label "Show color-graded blobs 50"  -command {
+    tolisp "(mds-window-set-constant-stress-shapes-color-graded $lisp_tk_stream_number :stress-delta 50.0)"
+}
+
+
+
+###----------------------------------------------------------------------
+###                          PRINTING
+###----------------------------------------------------------------------
+
+set home         $env(HOME)
+set postscript_dir    $home/ps
+
+proc ps_page {widget file} {
+  $widget postscript -file $file -pagewidth 6.5i -pageheight 9i -rotate 1
+}
+
+bind .c 1 {ps_page .c $postscript_dir/xy1.ps}
+bind .c 2 {ps_page .c $postscript_dir/xy2.ps}
+bind .c 3 {ps_page .c $postscript_dir/x3y.ps}
+bind .c 4 {ps_page .c $postscript_dir/xy4.ps}
+bind .c 5 {
+	exec ~dsmith/bin/imps4 > ~dsmith/ps/delete-wish.ps
+	exec ghostview -monochrome ~dsmith/ps/delete-wish.ps
+}
+
+
+###----------------------------------------------------------------------
+###                      PACKING BUTTONS
+###----------------------------------------------------------------------
+
+pack .hillclimb-button \
+     .hillclimb-in-new-window-button \
+     .landscape-button \
+     .randomize-coordss-button \
+     .fill-window \
+     .flipX .flipY \
+     .lines-button \
+     .procrustes-button \
+     .orient-button \
+     .constant-force-locii-button \
+     .save-button \
+     .print-button \
+     .stop-hillclimb \
+     .quit-button \
+     -in .left.left
+
+pack .selecting-mode-button \
+     .translating-mode-button \
+     .zooming-mode-button \
+     .rotating-mode-button \
+     .plotspec-button \
+     .adjusting-mode-button \
+     .freezing-mode-button \
+     .disconnecting-mode-button \
+     .nameing-mode-button \
+     -in .left.right
+
+raise .c
+
+
+#     .moving-mode-button 
+
+
+###----------------------------------------------------------------------
+###               TODO
+###----------------------------------------------------------------------
+
+# SELECTING POINTS TO DEFINE A PLANE
+
+

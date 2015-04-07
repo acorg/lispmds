@@ -1,0 +1,8 @@
+#.g configure -bufferelements 0
+# .g configure -width 400 -height 400 
+.g configure -bg white -plotbackground white -plotrelief ridge
+.g legend configure -bg white -relief ridge
+#.g legend configure -position @80,25
+.g legend configure -font *-Times-Medium-R-Normal-*-120-*
+.g configure -font *-Times-Medium-R-Normal-*-120-*
+

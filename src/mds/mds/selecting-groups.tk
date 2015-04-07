@@ -1,0 +1,24 @@
+###----------------------------------------------------------------------
+###                  select text items in a rectangle
+###----------------------------------------------------------------------
+
+bind .c <Button-1> {
+    set startX %x
+    set startY %y
+    set elasticRectangle [.c create rectangle $startX $startY $startX $startY]
+}
+bind .c <B1-Motion> {
+    .c coords $elasticRectangle $startX $startY %x %y
+}
+
+bind .c <B1-ButtonRelease> {
+    set foo [.c coords $elasticRectangle]
+    .c addtag currentlySelected enclosed [lindex $foo 0] [lindex $foo 1] [lindex $foo 2] [lindex $foo 3]
+    set names {}
+    foreach textId [.c find withtag {currentlySelected&&text}] {
+	lappend names [.c itemcget $textId -text]
+    }
+    tolisp "(print '($names))"
+    .c dtag currentlySelected currentlySelected
+    .c delete $elasticRectangle
+}

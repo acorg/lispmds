@@ -1,0 +1,148 @@
+set debug 0
+set host "127.0.0.1"
+
+# Timeout is how long to wait for the socket connection
+set timeout 2000
+
+# Maintain a queue of items we have not yet written back to our peer.
+set output_queue [list]
+
+proc goodbye { send_to_peer status message } {
+    # Don't set send_to_peer unless $out is still open!
+    global debug in out argv0
+
+    if {[string length "$message"] > 0} {
+	if { $debug } {
+	    puts stderr "$argv0: goodbye: $message"
+	}
+
+	if { $send_to_peer } {
+	    puts $out $message
+	    flush $out
+	}
+    }
+
+    if { ! $debug } {
+	# No need to close $out since it is the same as $in.
+	close $in
+    }
+
+    exit $status
+}
+
+proc write_queue_push {item} {
+    global output_queue out
+    lappend output_queue $item
+    # Set a callback to dispose of this line.
+    fileevent $out w [list writeline $out]
+}
+
+proc write_queue_pop {} {
+    global output_queue
+    set item [lindex $output_queue 0]
+    set output_queue [lreplace $output_queue 0 0]
+    return $item
+}
+
+proc writeline {out} {
+    global output_queue
+    if {[eof $out]} {
+	close $out
+	if { [llength $output_queue] > 0 } {
+	    # This shouldn't have happened!
+	    goodbye 0 2 "Write connection EOF while we have a non-empty write buffer"
+	} else {
+	    # Don't call goodbye, let readline take care of that.
+	    # puts stderr "write EOF"
+	    return
+	}
+    }
+
+    if { [llength $output_queue] > 0 } {
+	puts $out [write_queue_pop]
+	flush $out
+    }
+
+    # If the queue has dropped to size zero, cancel the callback.
+    if { [llength $output_queue] == 0 } {
+	fileevent $out w ""
+    }
+}
+
+proc readline {in} {
+    global quit exception_str
+    if {[eof $in]} {
+	goodbye 1 0 "Connection closed by peer."
+    } elseif { [catch { set len [gets $in line] } err ] } {
+	goodbye 1 1 "Connection problem ($err). Exiting."
+    }
+
+    if { $len != -1 } {
+	# -1 indicates an incomplete read due to non-blocking I/O.
+	if {[string compare $line $quit] == 0} {
+	    # goodbye 0 "Client sent quit command '$quit'. Exiting."
+	    goodbye 0 0 ""
+	} elseif { [catch { set ret [eval "uplevel #0 { $line }"] } err] } {
+	    write_queue_push "!$exception_str $err (when trying to eval '$line')."
+	    # puts stderr "Caught exception: $err"
+	} 
+    }
+}
+
+proc check_connected {} {
+    global connected argv0 timeout
+    if { $connected } {
+	puts stderr "$argv0: after alarm went off when we were already flagged as connected. Odd."
+    } else {
+	puts stderr "$argv0: Did not get socket connection after ${timeout}ms. Exiting."
+	exit 3
+    }
+}
+
+proc connected {sock} {
+    global connected after_id in out hello_str
+    set connected 1
+    after cancel $after_id
+
+    set err [fconfigure $sock -error]
+
+    if { $err != "" } {
+	puts stderr "Socket open failed ($err)."
+	exit 4
+    }
+
+    set in $sock
+    set out $sock
+    # puts stderr "Wish: Got socket..."
+    write_queue_push $hello_str
+
+    fconfigure $in  -buffering line -blocking 0
+    fconfigure $out -buffering line -blocking 0
+
+    # Set read callbacks (the read callback will set a write callback if it wants to reply).
+    fileevent $in r [list readline $in]
+}
+
+if { $debug } {
+    set in stdin
+    set out stdout
+    set exception_str "Exception:"
+    set quit "quit"
+    puts stderr "Type $quit to quit."
+} else {
+    if {$argc != 4} {
+	puts stderr "Usage: $argv0 port hello-string exception-string quit-command"
+	exit 1
+    }
+
+    set port          [lindex $argv 0]
+    set hello_str     [lindex $argv 1]
+    set exception_str [lindex $argv 2]
+    set quit          [lindex $argv 3]
+
+    set connected 0
+    set sock [socket -async $host $port]
+    # puts "Socket connection sought, awaiting connection."
+    set after_id [after $timeout { check_connected }]
+    fileevent $sock w [list connected $sock]
+}

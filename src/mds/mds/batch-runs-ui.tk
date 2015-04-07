@@ -1,0 +1,131 @@
+###----------------------------------------------------------------------
+###                               SETUP 
+###----------------------------------------------------------------------
+
+wm title . "Batch runs"
+
+label .counter -wraplength 4i -justify center -text "Click optimize icon to start"
+pack .counter -side bottom
+
+frame .buttons
+frame .list -borderwidth 10
+pack .buttons -side left -fill y
+pack .list -side right -fill both -expand 1
+
+# label .msg -wraplength 4i -justify left -text "Double click on a stress for map"
+# pack .msg -side top
+
+###----------------------------------------------------------------------
+###                       SAVE TO A FILE 
+###----------------------------------------------------------------------
+
+set initialDir "mds/data/tmp/"
+set initialFile ""   ;# unfortunately not accepted by tk_getOpenFile (why?)
+
+proc getSaveFilename {title} {
+  ;# unfortunately -parent does not seem to work so the window is created in the middle
+  ;# of the screen.  and -initialFile does not apply for getOpenFile.  
+  global initialDir initialFile 
+  set file [tk_getSaveFile -title $title -initialdir $initialDir]
+
+  if {![string match $file ""]} {
+    # set defaults for the next access 
+    set fileComponents [split $file /] ;# will this work under MSwindows?
+    set initialFile [lindex $fileComponents [expr [llength $fileComponents]-1]]
+    set initialDir [string range $file 0 [expr [string length $file]-[string length $initialFile]-1]]
+  }
+
+  return $file
+}
+
+###----------------------------------------------------------------------
+###                         BUTTONS
+###----------------------------------------------------------------------
+
+# button .buttons.hillclimb -bitmap @$bitmapDir/hillclimb.xbm -command {
+#    tolisp "(run-from-batch-runs-ui-window $lisp_tk_stream_number :num-runs 3)"
+# }
+
+menubutton .buttons.dim-anneal -bitmap @$bitmapDir/hillclimb.xbm -direction right -menu .buttons.dim-anneal.menu -relief raised
+menu .buttons.dim-anneal.menu -tearoff 0
+.buttons.dim-anneal.menu add command -label "non-anneal run (3 runs)" -command {tolisp "(run-from-batch-runs-ui-window $lisp_tk_stream_number :num-runs 3)"}
+.buttons.dim-anneal.menu add command -label "non-anneal run (10 runs)" -command {tolisp "(run-from-batch-runs-ui-window $lisp_tk_stream_number :num-runs 10)"}
+.buttons.dim-anneal.menu add command -label "dim anneal two-phase (1 run)" -command {tolisp "(run-from-batch-runs-ui-window $lisp_tk_stream_number :num-runs 1 :dim-anneal-f 'lisp-dim-anneal-two-phase           )"}
+.buttons.dim-anneal.menu add command -label "dim anneal two-phase (3 runs)" -command {tolisp "(run-from-batch-runs-ui-window $lisp_tk_stream_number :num-runs 3 :dim-anneal-f 'lisp-dim-anneal-two-phase           )"}
+.buttons.dim-anneal.menu add command -label "dim anneal two-phase (10 runs)" -command {tolisp "(run-from-batch-runs-ui-window $lisp_tk_stream_number :num-runs 10 :dim-anneal-f 'lisp-dim-anneal-two-phase           )"}
+.buttons.dim-anneal.menu add command -label "dim anneal two-phase (25 runs)" -command {tolisp "(run-from-batch-runs-ui-window $lisp_tk_stream_number :num-runs 25 :dim-anneal-f 'lisp-dim-anneal-two-phase           )"}
+.buttons.dim-anneal.menu add command -label "dim anneal two-phase (100 runs)" -command {tolisp "(run-from-batch-runs-ui-window $lisp_tk_stream_number :num-runs 100 :dim-anneal-f 'lisp-dim-anneal-two-phase           )"}
+#.buttons.dim-anneal.menu add command -label "c da: two phase (3 runs)      " -command {tolisp "(run-from-batch-runs-ui-window $lisp_tk_stream_number :num-runs 3 :c-dim-anneal-f 'dim-anneal-two-phase           )"}
+#.buttons.dim-anneal.menu add command -label "c da: short steps (3 runs)" -command {tolisp "(run-from-batch-runs-ui-window $lisp_tk_stream_number :num-runs 3 :c-dim-anneal-f 'dim-anneal-short-steps         )"}
+#.buttons.dim-anneal.menu add command -label "c da: long steps (3 runs)" -command {tolisp "(run-from-batch-runs-ui-window $lisp_tk_stream_number :num-runs 3 :c-dim-anneal-f 'dim-anneal-long-steps          )"}
+#.buttons.dim-anneal.menu add command -label "c da: two phase (10 runs)      " -command {tolisp "(run-from-batch-runs-ui-window $lisp_tk_stream_number :num-runs 10 :c-dim-anneal-f 'dim-anneal-two-phase           )"}
+#.buttons.dim-anneal.menu add command -label "c da: short steps (10 runs)" -command {tolisp "(run-from-batch-runs-ui-window $lisp_tk_stream_number :num-runs 10 :c-dim-anneal-f 'dim-anneal-short-steps         )"}
+#.buttons.dim-anneal.menu add command -label "c da: long steps (10 runs)" -command {tolisp "(run-from-batch-runs-ui-window $lisp_tk_stream_number :num-runs 10 :c-dim-anneal-f 'dim-anneal-long-steps          )"}
+#.buttons.dim-anneal.menu add command -label "c da gridware: two phase (10 runs) " -command {tolisp "(run-from-batch-runs-ui-window $lisp_tk_stream_number :num-runs 10 :c-dim-anneal-f 'dim-anneal-two-phase-gridware  )"}
+#.buttons.dim-anneal.menu add command -label "c da gridware: short steps (10 runs)" -command {tolisp "(run-from-batch-runs-ui-window $lisp_tk_stream_number :num-runs 10 :c-dim-anneal-f 'dim-anneal-short-steps-gridware)"}
+#.buttons.dim-anneal.menu add command -label "c da gridware: long steps (10 runs)" -command {tolisp "(run-from-batch-runs-ui-window $lisp_tk_stream_number :num-runs 10 :c-dim-anneal-f 'dim-anneal-long-steps-gridware )"}
+.buttons.dim-anneal.menu add command -label "gridware two phase (3 runs) " -command {tolisp "(run-from-batch-runs-ui-window $lisp_tk_stream_number :num-runs 3 :dim-anneal-f 'lisp-dim-anneal-two-phase-gridware  )"}
+.buttons.dim-anneal.menu add command -label "gridware two phase (10 runs) " -command {tolisp "(run-from-batch-runs-ui-window $lisp_tk_stream_number :num-runs 10 :dim-anneal-f 'lisp-dim-anneal-two-phase-gridware  )"}
+.buttons.dim-anneal.menu add command -label "gridware two phase (25 runs) " -command {tolisp "(run-from-batch-runs-ui-window $lisp_tk_stream_number :num-runs 25 :dim-anneal-f 'lisp-dim-anneal-two-phase-gridware  )"}
+.buttons.dim-anneal.menu add command -label "gridware two phase (100 runs) " -command {tolisp "(run-from-batch-runs-ui-window $lisp_tk_stream_number :num-runs 100 :dim-anneal-f 'lisp-dim-anneal-two-phase-gridware  )"}
+
+
+# moved to tk-interface.tk for now as when we are running, we cannot get the stop through
+# button .buttons.stop -bitmap @$bitmapDir/halt.xbm -command {toLisp "(progn (setq *stop-batch-runs-from-batch-runs-ui* t) (setq *stop-optimization* t))"}
+
+button .buttons.recover -bitmap @$bitmapDir/recover-gridware.xbm -command {
+    tolisp "(batch-runs-ui-window-recover-gridware-runs $lisp_tk_stream_number)"
+}
+
+button .buttons.save -bitmap @$bitmapDir/save.xbm -command {
+    set filename [getSaveFilename "Enter filename in which to save configuration"]
+    if {!($filename == "")} {
+	tolisp "(save-configuration-from-batch-runs-ui-window $lisp_tk_stream_number \"$filename\")"
+    }
+}
+
+button .buttons.reset -bitmap @$bitmapDir/delete.xbm -command {
+    tolisp "(reset-batch-runs-ui $lisp_tk_stream_number)"
+}
+
+button .buttons.dismiss -bitmap @$bitmapDir/quit.xbm -command {
+    tolisp "(close-batch-runs-ui $lisp_tk_stream_number)"
+    tolisp "'eof"
+}
+
+pack .buttons.dim-anneal \
+     .buttons.recover \
+     .buttons.save \
+     .buttons.reset \
+     .buttons.dismiss \
+     -in .buttons
+
+
+###----------------------------------------------------------------------
+###          LISTBOX (code snarfed from tk demo colors.tcl)
+###----------------------------------------------------------------------
+
+scrollbar .list.scroll -command ".list.list yview"
+listbox .list.list -yscroll ".list.scroll set" \
+	-width 20 -height 16 -setgrid 1
+pack .list.list .list.scroll -side left -fill y -expand 1
+
+bind .list.list <Double-1> {
+  toLisp "(mds-visualization-from-batch-runs-ui $lisp_tk_stream_number '[selection get])"
+}
+
+proc addEntry {location item} {
+  .list.list insert $location $item
+}
+
+proc addEntries {location items} {
+  .list.list insert $location $items
+}
+
+proc removeEntry {location} {
+  .list.list delete $location
+}
+
+proc removeAllEntries {} {
+  .list.list delete 0 end
+}

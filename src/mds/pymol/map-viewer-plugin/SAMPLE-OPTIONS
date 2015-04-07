@@ -1,0 +1,61 @@
+# -*- mode: python; -*-
+
+# You can create titer planes as follows:
+# TiterPlane(30, 'titer plane', (1.0, 0.0, 0.0), 3, -10, 20, -5, 15).load()
+# See ../lib/TiterPlane.py for argument details.
+
+options.update({
+	# 'png file' : '/tmp/pymol.png',
+	# 'ray' : True,
+	# 'quit' : True,
+	# 'view' : (-0.006936478428542614, -0.60884374380111694, 0.79325872659683228, 0.82429742813110352, 0.44561582803726196, 0.34922727942466736, -0.56611549854278564, 0.65630102157592773, 0.49877598881721497, 0.0, 0.0, -66.27362060546875, 0.0, 0.0, 0.0, 36.273616790771484, 96.273635864257812, 0.0),
+    })
+
+defaultMapOptions.update({
+    'strains compute' : False,
+    'strains names compute' : False,
+    'antisera compute' : False,
+    'antisera names compute' : False,
+    'bounding box compute' : False,
+    'titer compute' : False,
+    'procrustes names compute' : False,
+    'procrustes spheres compute' : False,
+    'procrustes lines compute' : False,
+    'bounding box compute' : False,
+    'grid compute' : False,
+    'notches compute' : False,
+    'dots compute' : False,
+    'titer plane compute' : False,
+    'prediction lines compute' : False,
+    'correction lines compute' : False,
+    'error lines compute' : False,
+    })
+
+perMapOptions.update({
+    '/Users/terry/mds/src/mds/pymol/map-viewer-plugin/L1.pml' : {
+	'cgo prefix' : 'L1_',
+	'strains compute' : True,
+	'strains names compute' : True,
+	'strains triangle fans compute' : True,
+	'antisera compute' : True,
+	'antisera names compute' : True,
+	'antisera triangle fans compute' : True,
+	'bounding box compute' : True,
+	'titer compute' : True,
+	'procrustes names compute' : True,
+	'procrustes spheres compute' : True,
+	'procrustes lines compute' : True,
+	'bounding box compute' : True,
+	'grid compute' : True,
+	'notches compute' : True,
+	'dots compute' : True,
+	'titer plane compute' : True,
+	'prediction lines compute' : True,
+	'correction lines compute' : True,
+	'error lines compute' : True,
+	},
+
+    '/Users/terry/mds/src/mds/pymol/map-viewer-plugin/L2.pml' : {
+	'cgo prefix' : 'L2_',
+	},
+    })

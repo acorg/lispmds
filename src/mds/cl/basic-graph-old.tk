@@ -1,0 +1,113 @@
+source "~/cl/basic-tk.tk"
+
+#set BLT_DIR /network/software/packages/blt
+set BLT_DIR /nfs/u1/terry/s/blt
+	
+#set BLT_BINARY blt_wish
+set BLT_BINARY /nfs/u8/dsmith/bin/pad_blt_wish
+	
+set graph_dir    $home/ps
+#set graph_dir    /tmp
+
+set graphFile xy
+
+blt_graph .g
+.g configure -width 550 -height 350
+.g configure -bottommargin 50
+.g configure -bg #f1e3cc -plotbackground #fff7e8
+
+.g xaxis configure -subticks 5 -ticklength 8
+.g xaxis configure -loose 1
+#.g xaxis configure -title "Abscissa"
+#.g xaxis configure -min 0
+
+.g yaxis configure -subticks 5 -ticklength 8
+#.g yaxis configure -loose 1
+#.g yaxis configure -title "Ordinate"
+#.g yaxis configure -min 0
+
+.g legend configure -bg #f1e3cc -activebackground #ff9385
+
+.g crosshairs configure -dashes 3
+
+
+pack .g -side right -fill both -expand 1
+
+
+source $BLT_DIR/demos/features.tcl
+#SetCrosshairs .g
+SetActiveLegend .g
+SetClosestPoint .g
+SetZoom .g
+
+wm min . 0 0
+wm geometry . -10+10
+
+proc ConfigureGraph { interp graph } {
+    global BLT_DIR BLT_BINARY
+    exec $BLT_BINARY -name GraphConfig -f $BLT_DIR/demos/grconf.tcl $interp $graph &
+}
+
+set graph .g
+
+bind $graph <Button-3> { %W crosshairs toggle }
+        
+proc TurnOnHairs { graph } {
+    bind $graph <Any-Motion> {%W crosshairs configure -position @%x,%y}
+}
+proc TurnOffHairs { graph } {
+    bind $graph <Any-Motion> {%W crosshairs configure -position @%x,%y}
+}
+
+bind $graph <Enter> { TurnOnHairs %W }
+bind $graph <Leave> { TurnOffHairs %W }
+
+
+
+proc MybltFindElement { graph x y } {
+    set info [$graph element closest $x $y ]
+    if { $info == "" } {
+	blt_bell
+	return
+    }
+    set name [lindex $info 0]
+    set points [lrange $info 2 3]
+    set index [lindex $info 1]
+    global tagId
+    catch { $graph tag delete $tagId($graph,$name,$index) }
+    set tagId($graph,$name,$index) \
+	[$graph tag create text $points -text " $name \[$index\] " -anchor s \
+	 -yoffset -10 -fg black -bg {}]
+    #bltFlashPoint $graph $name $index 10
+}
+proc MySetClosestPoint { graph button} {
+    global bindings
+
+    global tagId
+    set tagId(dummy) {}
+    set bindings($button,$graph,closestPoint) {
+	MybltFindElement %W  %x %y
+    }
+    bltResetBindings $graph $button
+}
+
+MySetClosestPoint .g <Shift-Button-3>
+
+
+
+
+proc ps_page {widget file} {
+  $widget postscript $file -pagewidth 6.5i -pageheight 9i -landscape true
+}
+
+bind .g 1 {ps_page .g $graph_dir/xy1.ps}
+bind .g 2 {ps_page .g $graph_dir/xy2.ps}
+bind .g 3 {ps_page .g $graph_dir/xy3.ps}
+bind .g 4 {ps_page .g $graph_dir/xy4.ps}
+bind .g 5 {
+	exec /nfs/research/dsmith/bin/imps4 > /nfs/research/dsmith/ps/delete-wish.ps
+	exec ghostview -monochrome /nfs/research/dsmith/ps/delete-wish.ps
+}
+
+focus .g
+
