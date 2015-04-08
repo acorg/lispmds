@@ -82,7 +82,7 @@ $ open /opt/homebrew-cask/Caskroom/xquartz/2.7.7/XQuartz.pkg
 $ brew tap homebrew/dupes
 $ brew install homebrew/dupes/tcl-tk --enable-threads --with-x11
 $ brew link -f tcl-tk
-$ brew install python --with-brewed-tk --enable-threads
+$ brew install python --with-brewed-tk --enable-threads --with-x11
 $ brew linkapps python
 ```
 
