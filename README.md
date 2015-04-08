@@ -29,8 +29,7 @@ and save it to a file (we'll assume you save it to `~/Downloads/acl80-mac-intel.
 Then on the command line (i.e., using the `Terminal` app) install it:
 
 ```
-$ mkdir -p /usr/local/acl80
-$ cd /usr/local/acl80
+$ cd /usr/local
 $ tar xfj ~/Downloads/acl80-mac-intel.tar.bz2
 ```
 
