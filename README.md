@@ -79,7 +79,6 @@ $ open /opt/homebrew-cask/Caskroom/xquartz/2.7.7/XQuartz.pkg
 ## Install tcl/tk and python
 
 ```
-$ brew tap homebrew/science
 $ brew tap homebrew/dupes
 $ brew install homebrew/dupes/tcl-tk --enable-threads --with-x11
 $ brew link -f tcl-tk
@@ -92,6 +91,7 @@ $ brew linkapps python
 LispMDS can interact with [Pymol](https://www.pymol.org/). Set that up via:
 
 ```
+$ brew tap homebrew/science
 $ brew install pymol
 ```
 
