@@ -6,9 +6,10 @@ developed at the
 [Centre for Pathogen Evolution](http://www.pathogenevolution.zoo.cam.ac.uk/) (CPE)
 at the [University of Cambridge](http://www.cam.ac.uk/).
 
-# Installation on Mac OS X
+# Installation on Mac OS X via brew
 
-The following is known to work on OS X Yosemite 10.10.2.
+The following is known to work on OS X Yosemite 10.10.2. We do not yet have
+installation instructions for other flavors of UNIX or other operating systems.ñ
 
 ## Allegro Common Lisp
 
@@ -55,14 +56,19 @@ of the `lispmds` repository checked out. In this case, make a symbolic link
 called `lispmds` in `/usr/local` that points to your locally checked out
 git repository.  E.g., via `ln -s $HOME/ac/lispmds /usr/local/lispmds`.
 
-## Mac OS X
+## Install brew
 
 First, if you're not already using it, install [Homebrew](http://brew.sh/),
 an OS X package manager.
 
-## Install X11
+We make use of brew [Caskroom](http://caskroom.io/), so you'll need that
+too:
 
-Get brew to install XQuartz.
+```
+$ brew install caskroom/cask/brew-cask
+```
+
+## Install X11 via brew
 
 You will be prompted for your password while the first command below is
 running if brew needs to create `/opt/homebrew-cask`.
@@ -76,7 +82,7 @@ $ brew cask install Caskroom/cask/xquartz
 $ open /opt/homebrew-cask/Caskroom/xquartz/2.7.7/XQuartz.pkg
 ```
 
-## Install tcl/tk and python
+## Install tcl/tk and python via brew
 
 ```
 $ brew tap homebrew/dupes
@@ -86,9 +92,9 @@ $ brew install python --with-brewed-tk --enable-threads --with-x11
 $ brew linkapps python
 ```
 
-## Installing Pymol
+## Installing PyMOL via brew
 
-LispMDS can interact with [Pymol](https://www.pymol.org/). Set that up via:
+LispMDS can interact with [PyMOL](https://www.pymol.org/). Set that up via:
 
 ```
 $ brew tap homebrew/science
