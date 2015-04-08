@@ -11,7 +11,7 @@ at the [University of Cambridge](http://www.cam.ac.uk/).
 The following is known to work on OS X Yosemite 10.10.2. We do not yet have
 installation instructions for other flavors of UNIX or other operating systems.
 
-## Allegro Common Lisp
+## Install Allegro Common Lisp
 
 We run LispMDS under
 [Allegro Common Lisp](http://franz.com/products/allegrocl/) (ACL). LispMDS
@@ -20,13 +20,12 @@ is unlikely to run out-of-the-box on other Lisp implementations.
 If you're not at the CPE, you're on your own as to obtaining ACL. The
 install instructions below may be of some use, though.
 
-### CPE members
-
 If you're at the CPE,
 [download ACL](https://notebooks.antigenic-cartography.org/eu/acl80-mac-intel.tar.bz2)
 and save it to a file (we'll assume you save it to `~/Downloads/acl80-mac-intel.tar.bz2`).
 
-Then on the command line (i.e., using the `Terminal` app) install it:
+Open the OS X `Terminal` application and type the following commands to
+install ACL:
 
 ```
 $ cd /usr/local
@@ -93,7 +92,7 @@ $ brew install python --with-brewed-tk --enable-threads --with-x11
 $ brew linkapps python
 ```
 
-## Installing PyMOL via brew
+## Install PyMOL via brew
 
 LispMDS can interact with [PyMOL](https://www.pymol.org/). Set that up via:
 
