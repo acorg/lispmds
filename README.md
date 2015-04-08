@@ -55,21 +55,54 @@ of the `lispmds` repository checked out. In this case, make a symbolic link
 called `lispmds` in `/usr/local` that points to your locally checked out
 git repository.  E.g., via `ln -s $HOME/ac/lispmds /usr/local/lispmds`.
 
-# Installing Pymol
-
-LispMDS can interact with [Pymol](https://www.pymol.org/). Here's how to set it up.
-
 ## Mac OS X
 
 First, if you're not already using it, install [Homebrew](http://brew.sh/),
 an OS X package manager.
 
-Then:
+## Install X11
+
+Get brew to install XQuartz.
+
+You will be prompted for your password while the first command below is
+running if brew needs to create `/opt/homebrew-cask`.
+
+The second command below will present you a normal Mac OS X dialog to
+install the XQuartz application that brew downloaded.  You'll be asked to
+accept the license and for your password.
+
+```
+$ brew cask install Caskroom/cask/xquartz
+$ open /opt/homebrew-cask/Caskroom/xquartz/2.7.7/XQuartz.pkg
+```
+
+## Install tcl/tk and python
 
 ```
 $ brew tap homebrew/science
 $ brew tap homebrew/dupes
 $ brew install homebrew/dupes/tcl-tk --enable-threads --with-x11
-$ brew install python --with-brewed-tk
+$ brew link -f tcl-tk
+$ brew install python --with-brewed-tk --enable-threads
+$ brew linkapps python
+```
+
+## Installing Pymol
+
+LispMDS can interact with [Pymol](https://www.pymol.org/). Set that up via:
+
+```
 $ brew install pymol
 ```
+
+# Running LispMDS
+
+Run the LispMDS GUI via:
+
+```
+$ /usr/local/lispmds/bin/mds-gui
+```
+
+It will be more convenient for you if you make a shell alias for this, or
+put `/usr/local/lispmds/bin` into your shell's `PATH`.  If you don't know
+how to do that, ask a friendly system administrator for help :-)
