@@ -14,8 +14,8 @@ installation instructions for other flavors of UNIX or other operating systems.
 ## Allegro Common Lisp
 
 We run LispMDS under
-[Allegro Common Lisp](http://franz.com/products/allegrocl/) (ACL) and is
-unlikely to run out-of-the-box on other Lisp implementations.
+[Allegro Common Lisp](http://franz.com/products/allegrocl/) (ACL). LispMDS
+is unlikely to run out-of-the-box on other Lisp implementations.
 
 If you're not at the CPE, you're on your own as to obtaining ACL. The
 install instructions below may be of some use, though.
@@ -42,6 +42,8 @@ it:
 ```
 $ mv ~/Downloads/acl80-mac-intel-enterprise.lic /usr/local/acl80/devel.lic
 ```
+
+## Install the lispmds source
 
 *If you are not working on LispMDS development*, get a copy of the LispMDS
 source code:
@@ -112,3 +114,20 @@ $ /usr/local/lispmds/bin/mds-gui
 It will be more convenient for you if you make a shell alias for this, or
 put `/usr/local/lispmds/bin` into your shell's `PATH`.  If you don't know
 how to do that, ask a friendly system administrator for help :-)
+
+# Upgrading lispmds
+
+If changes have been made to LispMDS, and you're not a LispMDS developer,
+you can install them via:
+
+```
+$ cd /usr/local/lispmds
+$ git pull origin master
+```
+
+Restart LispMDS (if you're already running it) for the changes to take
+effect.
+
+If you are a LispMDS developer, you'll probably already know what to do.
+Note that you can try out different branches just by switching to them (via
+`git checkout branch-name`) in your local LispMDS repository.
