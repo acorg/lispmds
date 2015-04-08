@@ -9,7 +9,7 @@ at the [University of Cambridge](http://www.cam.ac.uk/).
 # Installation on Mac OS X via brew
 
 The following is known to work on OS X Yosemite 10.10.2. We do not yet have
-installation instructions for other flavors of UNIX or other operating systems.ñ
+installation instructions for other flavors of UNIX or other operating systems.
 
 ## Allegro Common Lisp
 
