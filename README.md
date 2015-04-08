@@ -1,10 +1,11 @@
 # LispMDS
 
-LispMDS is a Common Lisp implementation of
+LispMDS is a [Common Lisp](https://en.wikipedia.org/wiki/Common_Lisp)
+implementation of
 [Antigenic Cartography](http://www.pathogenevolution.zoo.cam.ac.uk/antigeniccartography)
 developed at the
-[Centre for Pathogen Evolution](http://www.pathogenevolution.zoo.cam.ac.uk/) (CPE)
-at the [University of Cambridge](http://www.cam.ac.uk/).
+[Centre for Pathogen Evolution](http://www.pathogenevolution.zoo.cam.ac.uk/)
+(CPE) at the [University of Cambridge](http://www.cam.ac.uk/).
 
 # Installation on Mac OS X via brew
 
