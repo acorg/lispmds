@@ -11,10 +11,8 @@ m4
 make
 perl
 src/mds/r
-src/mds/mds/data
 src/mds/mds/investigations
 src/mds/mds/rob-investigations
 src/mds/mds/presentations
 src/mds/mds/release
 www
-
