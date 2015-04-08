@@ -1,0 +1,75 @@
+# LispMDS
+
+LispMDS is a Common Lisp implementation of
+[Antigenic Cartography](http://www.pathogenevolution.zoo.cam.ac.uk/antigeniccartography)
+developed at the
+[Centre for Pathogen Evolution](http://www.pathogenevolution.zoo.cam.ac.uk/) (CPE)
+at the [University of Cambridge](http://www.cam.ac.uk/).
+
+# Installation on Mac OS X
+
+The following is known to work on OS X Yosemite 10.10.2.
+
+## Allegro Common Lisp
+
+We run LispMDS under
+[Allegro Common Lisp](http://franz.com/products/allegrocl/) (ACL) and is
+unlikely to run out-of-the-box on other Lisp implementations.
+
+If you're not at the CPE, you're on your own as to obtaining ACL. The
+install instructions below may be of some use, though.
+
+### CPE members
+
+If you're at the CPE,
+[download ACL](https://notebooks.antigenic-cartography.org/eu/acl80-mac-intel.tar.bz2)
+and save it to a file (we'll assume you save it to `~/Downloads/acl80-mac-intel.tar.bz2`).
+
+Then on the command line (i.e., using the `Terminal` app) install it:
+
+```
+$ mkdir -p /usr/local/acl80
+$ cd /usr/local/acl80
+$ tar xfj ~/Downloads/acl80-mac-intel.tar.bz2
+```
+
+Then
+[download the license file](https://notebooks.antigenic-cartography.org/eu/acl80-mac-intel-enterprise.lic)
+(here saved as `~/Downloads/acl80-mac-intel-enterprise.lic`) and install
+it:
+
+```
+$ mv ~/Downloads/acl80-mac-intel-enterprise.lic /usr/local/acl80/devel.lic
+```
+
+*If you are not working on LispMDS development*, get a copy of the LispMDS
+source code:
+
+```
+$ cd /usr/local
+$ git clone https://github.com/acorg/lispmds
+```
+
+*If you are working on LispMDS development*, you will already have a copy
+of the `lispmds` repository checked out. In this case, make a symbolic link
+called `lispmds` in `/usr/local` that points to your locally checked out
+git repository.  E.g., via `ln -s $HOME/ac/lispmds /usr/local/lispmds`.
+
+# Installing Pymol
+
+LispMDS can interact with [Pymol](https://www.pymol.org/). Here's how to set it up.
+
+## Mac OS X
+
+First, if you're not already using it, install [Homebrew](http://brew.sh/),
+an OS X package manager.
+
+Then:
+
+```
+$ brew tap homebrew/science
+$ brew tap homebrew/dupes
+$ brew install homebrew/dupes/tcl-tk --enable-threads --with-x11
+$ brew install python --with-brewed-tk
+$ brew install pymol
+```
