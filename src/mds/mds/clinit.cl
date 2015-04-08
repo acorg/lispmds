@@ -91,7 +91,7 @@
 
 
 (defun checkPath (path &optional &key assertIsFile assertIsDir assertExistent assertNonExistent (suffix ""))
-    ;; Only try the existence tests if we have loaded the funcs in os.lisp. We can't just require them
+  ;; Only try the existence tests if we have loaded the funcs in os.lisp. We can't just require them
   ;; here because we use this function to load files in an OS-independent way.
   (if (> (length suffix) 0)
       (setq path (concatenate 'string path suffix)))

@@ -1,4 +1,4 @@
-#!/usr/bin/expect -f
+#!/usr/bin/env expect -f
 
 # Args are expected to be 1) file to source, 2) postscript file to create.
 

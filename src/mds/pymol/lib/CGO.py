@@ -3,7 +3,7 @@ from pymol.vfont import plain
 from Coord import Coord
 
 if hasattr(cmd, 'get_version'):
-    _, version = cmd.get_version()
+    version = cmd.get_version()[1]
 else:
     # Set to something old.
     version = 0.98
