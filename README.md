@@ -83,7 +83,7 @@ $ brew cask install Caskroom/cask/xquartz
 $ open /opt/homebrew-cask/Caskroom/xquartz/2.7.7/XQuartz.pkg
 ```
 
-## Install tcl/tk and python via brew
+## Install tools via brew
 
 ```
 $ brew tap homebrew/dupes
@@ -91,6 +91,10 @@ $ brew install homebrew/dupes/tcl-tk --enable-threads --with-x11
 $ brew link -f tcl-tk
 $ brew install python --with-brewed-tk --enable-threads --with-x11
 $ brew linkapps python
+
+$ brew install gnuplot --with-x11
+$ brew install imagemagick
+$ brew install gs
 ```
 
 ## Install PyMOL via brew
