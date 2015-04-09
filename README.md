@@ -83,7 +83,7 @@ $ brew cask install Caskroom/cask/xquartz
 $ open /opt/homebrew-cask/Caskroom/xquartz/2.7.7/XQuartz.pkg
 ```
 
-## Install various tools via brew
+## Install tools via brew
 
 ```
 $ brew tap homebrew/dupes
