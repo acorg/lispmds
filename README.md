@@ -44,12 +44,18 @@ $ mv ~/Downloads/acl80-mac-intel-enterprise.lic /usr/local/acl80/devel.lic
 
 ## Install the lispmds source
 
-*If you are not working on LispMDS development*, get a copy of the LispMDS
-source code:
+*If you are not working on LispMDS development*, you'll need to get a copy of the LispMDS
+source code. First of all, create a [Github](http://github.com) account. Send either
+Barbara, Derek, Eugene or Terry your Github username and ask to be added to the team that
+can see the lispmds repository.
+
+Follow [the instructions for adding an ssh key](https://help.github.com/articles/generating-ssh-keys/)
+and uploading it into Github.  Once you've done that and you have been added to the lispmds team (last paragraph)
+you should be able to clone the Github repository:
 
 ```
 $ cd /usr/local
-$ git clone https://github.com/acorg/lispmds
+$ git clone git@github.com:acorg/lispmds
 ```
 
 *If you are working on LispMDS development*, you will already have a copy
