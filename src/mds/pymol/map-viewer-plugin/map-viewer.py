@@ -4,10 +4,7 @@ import sys
 import os
 from pymol import cmd
 
-if os.environ.get('USER') == 'terry':
-    debug = True
-else:
-    debug = False
+debug = os.environ.get('USER', '') == 'terry':
 
 try:
     import tkFileDialog
@@ -16,9 +13,9 @@ except ImportError:
     haveTk = False
 
 if sys.platform == 'darwin':
-    if 'MDS_ROOT' not in os.environ:
-	raise ImportError, "Environment variable MDS_ROOT is not set."
-    mdsLibDir = os.path.join(os.environ['MDS_ROOT'], 'src', 'mds', 'pymol', 'lib')
+    mdsLibDir = os.path.join(
+        os.environ.get('MDS_ROOT', '/usr/local/lispmds'),
+        'src', 'mds', 'pymol', 'lib')
 elif sys.platform[0:3] == 'win':
     mdsLibDir = os.path.join('C:\\', 'Program Files', 'mds', 'pymol', 'lib')
 else:
@@ -55,7 +52,7 @@ if haveTk:
 				     'ABL debug',
 				     label='ABL debug',
 				     command=lambda s=self : fetch_abl_data_debug(s))
-	    
+
 	    self.menuBar.addmenuitem('Plugin', 'command',
 				     'Triangle debug',
 				     label='Triangle debug',
@@ -115,7 +112,7 @@ def abl(*files, **kwargs):
 
     if 'optionsFile' in kwargs:
 	execfile(kwargs['optionsFile'], globals(), locals())
-    
+
     for file in files:
 	print "Processing file '%s'." % file
 	fileOptions = perMapOptions.get(file, {})
@@ -126,9 +123,9 @@ def abl(*files, **kwargs):
 	mapOptions = defaultMapOptions.copy()
 	restrictedUpdate(mapOptions, fileOptions)
 	ACmap(file, mapOptions)
-	
+
     # Process global options.
-	
+
     cmd.clip('far', -20.0)
     #cmd.clip('near', 100.0)
 
