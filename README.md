@@ -95,7 +95,7 @@ $ open /opt/homebrew-cask/Caskroom/xquartz/2.7.7/XQuartz.pkg
 $ brew tap homebrew/dupes
 $ brew install homebrew/dupes/tcl-tk --enable-threads --with-x11
 $ brew link -f tcl-tk
-$ brew install python --with-brewed-tk --enable-threads --with-x11
+$ brew install python --with-tcl-tk --enable-threads --with-x11
 $ brew linkapps python
 
 $ brew install gnuplot --with-x11
@@ -111,6 +111,34 @@ LispMDS can interact with [PyMOL](https://www.pymol.org/). Set that up via:
 $ brew tap homebrew/science
 $ brew install pymol
 ```
+
+It may be that your pymol relies on a version of the GLEW library that you don't have installed.
+Try running `pymol` at the terminal. If you see an error like the following
+
+```
+$ pymol
+Traceback (most recent call last):
+  File "/usr/local/Cellar/pymol/1.7.4.0/libexec/lib/python2.7/site-packages/pymol/__init__.py", line 71, in <module>
+    import pymol
+  File "/usr/local/Cellar/pymol/1.7.4.0/libexec/lib/python2.7/site-packages/pymol/__init__.py", line 533, in <module>
+    import pymol._cmd
+ImportError: dlopen(/usr/local/Cellar/pymol/1.7.4.0/libexec/lib/python2.7/site-packages/pymol/_cmd.so, 2): Library not loaded: /usr/local/lib/libGLEW.1.11.0.dylib
+  Referenced from: /usr/local/Cellar/pymol/1.7.4.0/libexec/lib/python2.7/site-packages/pymol/_cmd.so
+  Reason: image not found
+```
+
+you'll need to install version 1.11 of GLEW manually. Go to [the download page for GLEW 1.11](http://sourceforge.net/projects/glew/files/glew/1.11.0/) and download the `glew-1.11.0.tgz` file. Then:
+
+```
+$ cd /tmp
+$ tar xfz ~/Downloads/glew-1.11.0.tgz
+$ cd glew-1.11.0
+$ make
+$ sudo make install
+```
+
+After this, you should be able to run `pymol` successfully. If pymol causes your screen to flicker crazily
+try running `pymol -M` to force mono mode.
 
 # Running LispMDS
 
