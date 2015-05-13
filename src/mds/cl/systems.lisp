@@ -4,6 +4,7 @@
 ;;;                       DEFSYSTEMS
 ;;;-------------------------------------------------------------------
 
+(load (uw-sfnr "test/defsystem" :assertIsFile t :suffix ".lisp"))
 (load (uw-sfnr "cl/defsystem" :assertIsFile t :suffix ".lisp"))
 (load (uw-sfnr "mds/defsystem" :assertIsFile t :suffix ".lisp"))
 
