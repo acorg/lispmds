@@ -91,10 +91,14 @@ $ open /opt/homebrew-cask/Caskroom/xquartz/2.7.7/XQuartz.pkg
 
 ## Install tools via brew
 
+Pay particular attention to the `$ brew link -f --overwrite tcl-tk` in the
+following. If it fails or gives any kind of warning or error, `wish` will
+not be linked in and starting pymol from the MDS gui will not work.
+
 ```
 $ brew tap homebrew/dupes
 $ brew install homebrew/dupes/tcl-tk --enable-threads --with-x11
-$ brew link -f tcl-tk
+$ brew link -f --overwrite tcl-tk
 $ brew install python --with-tcl-tk --enable-threads --with-x11
 $ brew linkapps python
 
@@ -102,6 +106,16 @@ $ brew install gnuplot --with-x11
 $ brew install imagemagick
 $ brew install gs
 ```
+
+To make sure the `wish` linking worked correctly:
+
+```
+$ type wish
+wish is /usr/local/bin/wish
+```
+
+If you insted see `/usr/bin/wish`, the `$ brew link -f --overwrite tcl-tk`
+command must have failed in some way.
 
 ## Install PyMOL via brew
 
@@ -112,8 +126,11 @@ $ brew tap homebrew/science
 $ brew install pymol
 ```
 
-It may be that your pymol relies on a version of the GLEW library that you don't have installed.
-Try running `pymol` at the terminal. If you see an error like the following
+### Check that pymol works
+
+It may be that your pymol relies on an older version of the GLEW library
+(1.11) that you don't have installed (you may have 1.12).  Try running
+`pymol` at the terminal. If you see an error like the following
 
 ```
 $ pymol
@@ -127,7 +144,9 @@ ImportError: dlopen(/usr/local/Cellar/pymol/1.7.4.0/libexec/lib/python2.7/site-p
   Reason: image not found
 ```
 
-you'll need to install version 1.11 of GLEW manually. Go to [the download page for GLEW 1.11](http://sourceforge.net/projects/glew/files/glew/1.11.0/) and download the `glew-1.11.0.tgz` file. Then:
+you'll need to install version 1.11 of GLEW manually. Go to
+[the download page for GLEW 1.11](http://sourceforge.net/projects/glew/files/glew/1.11.0/)
+and download the `glew-1.11.0.tgz` file. Then:
 
 ```
 $ cd /tmp
