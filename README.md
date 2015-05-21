@@ -156,8 +156,24 @@ $ make
 $ sudo make install
 ```
 
-After this, you should be able to run `pymol` successfully. If pymol causes your screen to flicker crazily
-try running `pymol -M` to force mono mode.
+After this, you should be able to run `pymol` successfully.
+
+### If pymol flickers like crazy
+
+If pymol causes your screen to flicker crazily try running `pymol -M` to
+force mono mode. If that works, you can set an environment variable so that
+the lisp MDS gui will know to invoke pymol with the `-M` flag. Put this
+into your `~/.bashrc` file:
+
+```
+export MDS_PYMOL_FORCE_MONO=1
+```
+
+Then in the terminal:
+
+```
+$ source ~/.bashrc
+```
 
 # Running LispMDS
 
@@ -170,6 +186,11 @@ $ /usr/local/lispmds/bin/mds-gui
 It will be more convenient for you if you make a shell alias for this, or
 put `/usr/local/lispmds/bin` into your shell's `PATH`.  If you don't know
 how to do that, ask a friendly system administrator for help :-)
+
+When you're looking at a map window in the GUI, all the buttons on the left
+hand side should have equal width. If they do not, you are not running the
+correct version of wish. See the warning above about making sure brew links
+the right version of wish!
 
 # Upgrading lispmds
 
