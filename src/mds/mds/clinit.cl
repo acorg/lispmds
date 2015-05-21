@@ -309,7 +309,7 @@
 (setq *unix-source-filename-root* 
   (if (sys:getenv "MDS_ROOT")
       (concatenate 'string (sys:getenv "MDS_ROOT") "/src/mds")
-    "~/mds/src/mds"))
+    "/usr/local/lispmds/src/mds"))
 
 
 ;; cmucl needs full path (it seems), leave other with ~ as that is more general for systems that are not /home/dsmith - based
