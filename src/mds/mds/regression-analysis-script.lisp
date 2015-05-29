@@ -7,11 +7,21 @@
 
 ;; ----------------- by location and substitution -----------------------
 
+(defun regression-renumber-mutations (all-mutations position-renumbering-list)
+  (loop for aannn in all-mutations collect
+        (read-from-string
+         (format nil "~a~3,'0d"
+                 (substring (string aannn) 0 1)
+                 (nth (dec (string->number (substring (string aannn) 2 4))) position-renumbering-list)))))
+;;(regression-renumber-mutations '(ab001 cd002) '(3 4))
+;;(AB003 CD004)
+
 (defun make-shape-sequence-regression-data (antigenic-save name-dna-pairs
 					    &optional &key
 						      (upto-n-mutations 10)
 						      interaction-terms
-                                                      lists-to-compare)
+                                                      lists-to-compare
+                                                      position-renumbering-list)
   
   (setq name-dna-pairs
     (loop for (name sequence) in name-dna-pairs 
@@ -75,20 +85,22 @@
                         (append 
                          sequence-differences
                          interactions)))))
-	 (all-mutations
-	  (sort-alpha 
-           ;; (remove-duplicates (apply-append (nths 4 shape-sequence-differences))) replaced by below for efficiency
-           (let* ((mutations-s (nths 4 shape-sequence-differences))
-                  (unique-mutations-so-far (car mutations-s)))
-             (loop for mutations in (cdr mutations-s) do
-                   (setq unique-mutations-so-far (my-union unique-mutations-so-far mutations)))
-             (if (not (equal (sort-alpha unique-mutations-so-far)
-                             (sort-alpha (remove-duplicates unique-mutations-so-far))))
-                 (error "unexpected condition"))
-             unique-mutations-so-far)
-           )))
+	 (all-mutations (sort-alpha 
+                         ;; (remove-duplicates (apply-append (nths 4 shape-sequence-differences))) replaced by below for efficiency
+                         (let* ((mutations-s (nths 4 shape-sequence-differences))
+                                (unique-mutations-so-far (car mutations-s)))
+                           (loop for mutations in (cdr mutations-s) do
+                                 (setq unique-mutations-so-far (my-union unique-mutations-so-far mutations)))
+                           (if (not (equal (sort-alpha unique-mutations-so-far)
+                                           (sort-alpha (remove-duplicates unique-mutations-so-far))))
+                               (error "unexpected condition"))
+                           unique-mutations-so-far)
+                         ))
+          (all-mutations-renumbered
+            (if position-renumbering-list
+                (regression-renumber-mutations all-mutations position-renumbering-list))))
     (cons
-     (append (list 'ag1 'ag2 'agdist 'hd) all-mutations)
+     (append (list 'ag1 'ag2 'agdist 'hd) (if position-renumbering-list all-mutations-renumbered all-mutations))
      (loop for (aa1 aa2 ag-dist num-mutations mutations) in (sort-nth 3 (sort-nth 2 shape-sequence-differences)) collect
            (append (list aa1 aa2 ag-dist num-mutations)
                    (loop for possible-mutation in all-mutations collect
@@ -103,7 +115,8 @@
 								(if-exists-action :error)
 								(upto-n-mutations 10)
 								interaction-terms-filename
-                                                                lists-to-compare)
+                                                                lists-to-compare
+                                                                position-renumbering-list)
   
   ;; write as csv so it can be read into excel
   (csvll
@@ -118,7 +131,8 @@
                                (equal "" interaction-terms-filename))
                            nil 
                          (fi-in interaction-terms-filename))
-    :lists-to-compare  lists-to-compare)
+    :lists-to-compare  lists-to-compare
+    :position-renumbering-list position-renumbering-list)
    :filename differences-output-filename
    :if-exists if-exists-action))
   
@@ -305,7 +319,8 @@
                                                  (pop-up-web-page t)
                                                  zip-results-dir
                                                  keep-regression-data-matrix-passed-to-r
-                                                 keep-extended-regression-data-matrix)     ;; in addition to the data passed to r, also includes the strain names and hamming distance
+                                                 keep-extended-regression-data-matrix     ;; in addition to the data passed to r, also includes the strain names and hamming distance
+                                                 )
 
   (if random-number-seed
       (if random-number-generator
