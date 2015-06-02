@@ -4,7 +4,7 @@ import sys
 import os
 from pymol import cmd
 
-debug = os.environ.get('USER', '') == 'terry':
+debug = os.environ.get('USER', '') == 'terry'
 
 try:
     import tkFileDialog
