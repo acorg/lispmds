@@ -174,8 +174,8 @@ wish is /usr/local/bin/wish
 ```
 
 If you insted see `/usr/bin/wish`, the `$ brew link -f --overwrite tcl-tk`
-command must have failed in some way. You *have* to get this right! If you
-can't, the following step may help.
+command must have failed in some way. You *have* to get this right! If it
+doesn't work, ask for help.
 
 ## Install PyMOL via brew
 
