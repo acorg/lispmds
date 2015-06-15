@@ -12,6 +12,9 @@ developed at the
 The following is known to work on OS X Yosemite 10.10.2. We do not yet have
 installation instructions for other flavors of UNIX or other operating systems.
 
+These instructions also assume you're using the `bash` shell. If you have
+no idea what that means, relax - you're probably using bash.
+
 ## Install Allegro Common Lisp
 
 We run LispMDS under
@@ -26,17 +29,20 @@ If you're at the CPE,
 and save it to a file (we'll assume you save it to `~/Downloads/acl80-mac-intel.tar.bz2`).
 
 Open the OS X `Terminal` application and type the following commands to
-install ACL:
+install ACL (note that you may be asked to enter your password for the
+second command):
 
 ```
 $ cd /usr/local
+$ [ -d acl80 ] || { sudo mkdir acl80; sudo chown $USER acl80; }
 $ tar xfj ~/Downloads/acl80-mac-intel.tar.bz2
 ```
 
 Then
 [download the license file](https://notebooks.antigenic-cartography.org/eu/acl80-mac-intel-enterprise.lic)
-(here saved as `~/Downloads/acl80-mac-intel-enterprise.lic`) and install
-it:
+(here saved as `~/Downloads/acl80-mac-intel-enterprise.lic` but, depending
+on your browser, you may have `acl80-mac-intel-enterprise.lic.txt`) and
+install it:
 
 ```
 $ mv ~/Downloads/acl80-mac-intel-enterprise.lic /usr/local/acl80/devel.lic
@@ -55,6 +61,7 @@ you should be able to clone the Github repository:
 
 ```
 $ cd /usr/local
+$ [ -d lispmds ] || { sudo mkdir lispmds; sudo chown $USER lispmds; }
 $ git clone git@github.com:acorg/lispmds
 ```
 
@@ -68,12 +75,64 @@ git repository.  E.g., via `ln -s $HOME/ac/lispmds /usr/local/lispmds`.
 First, if you're not already using it, install [Homebrew](http://brew.sh/),
 an OS X package manager.
 
+### Fix /usr/local permissions
+
+It's possible you'll need to change some permissions under `/usr/local` (I
+think this happens on systems that had some `/usr/local` directories before
+brew was installed). Run this command in any case (you may need your
+password):
+
+```
+$ sudo chown -R $USER /usr/local/share /usr/local/lib
+```
+
+## Install Caskroom
+
 We make use of brew [Caskroom](http://caskroom.io/), so you'll need that
 too:
 
 ```
 $ brew install caskroom/cask/brew-cask
 ```
+
+## Set up your shell environment
+
+### Don't use Mac Ports
+
+If you're using Mac ports, I (Terry) recommend you stop. You can tell by
+looking at your `PATH` variable:
+
+```
+$ echo $PATH
+```
+
+This will show all the directories your shell searches when you run a
+command. If you see `/opt/local/bin` listed in there, you're using Mac
+Ports.
+
+You can stop using Mac Ports by getting rid of any mention of
+`/sw/bin/init.sh` in either (or both) your `~/.bashrc` or `~/.bash_profile`
+files. If you don't know what you're doing, ask for help. If you know how
+to use a text editor and you think you know what you're doing, comment out
+any such lines (i.e., put a `#` at the start of the lines).
+
+### Set your shell's PATH
+
+Add this line to your `~/.bashrc`:
+
+```
+PATH="/usr/local/acl80:/usr/local/lispmds/bin:$PATH"
+```
+
+There shouldn't be any other lines altering your `PATH` in that file. If
+there are, either merge them or delete the other line.  If you don't know
+how to do that, ask for help.
+
+### See if it works
+
+At this point it's probably easiest to log out and log back in. If you
+repeat the `echo $PATH` command above, you should see no mention of
+`/opt/local/bin` in your `PATH`.
 
 ## Install X11 via brew
 
@@ -115,7 +174,8 @@ wish is /usr/local/bin/wish
 ```
 
 If you insted see `/usr/bin/wish`, the `$ brew link -f --overwrite tcl-tk`
-command must have failed in some way.
+command must have failed in some way. You *have* to get this right! If you
+can't, the following step may help.
 
 ## Install PyMOL via brew
 
@@ -162,8 +222,8 @@ After this, you should be able to run `pymol` successfully.
 
 If pymol causes your screen to flicker crazily try running `pymol -M` to
 force mono mode. If that works, you can set an environment variable so that
-the lisp MDS gui will know to invoke pymol with the `-M` flag. Put this
-into your `~/.bashrc` file:
+the lisp MDS gui (when you finally run it - see below) will know to invoke
+pymol with the `-M` flag. Put this into your `~/.bashrc` file:
 
 ```
 export MDS_PYMOL_FORCE_MONO=1
