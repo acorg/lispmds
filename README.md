@@ -262,8 +262,8 @@ $ cd /usr/local/lispmds
 $ git pull origin master
 ```
 
-Restart LispMDS (if you're already running it) for the changes to take
-effect.
+Restart LispMDS (if you're already running it) for the changes to
+take effect.
 
 If you are a LispMDS developer, you'll probably already know what to do.
 Note that you can try out different branches just by switching to them (via
