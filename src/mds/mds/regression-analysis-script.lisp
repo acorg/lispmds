@@ -545,6 +545,11 @@
                      (collect (^ (l) (< (nth 2 l) low-se-threshold)) regression-run)))
            :filename (string-append directory "/low-se-non-collinear.txt"))
 
+          ;; ----------------- low se, non-collinear, >1 strain ------------------
+          
+          ;; Derivative of above, but is furhter down in this function, after calc all-substs-info
+          
+
           ;; ------------------ sort by greatest ag effect -----------------------
           ;; simple
           (pp-regression-output
@@ -743,6 +748,16 @@
                all-substs-info
                :filename (string-append directory "/" "substs-strain-summary-details.txt"))
               
+              ;; this belongs aboove (comment "low se, non-collinear, >1 strain" above, but is here as had to be after we calc all-substs-info)
+              (pp-regression-output
+               (setq regression-run-exclude-low-copy-number-substitutions-low-se-non-collinear
+                 (filter-singletons 
+                  (filter (^ (l) (collinear-name-p (car l)))
+                          (collect (^ (l) (< (nth 2 l) low-se-threshold)) regression-run))
+                  all-substs-info))
+               :filename (string-append directory "/low-se-non-collinear-gt1strain.txt"))
+
+
               (if generate-graphics
                   (progn
                     ;; ---------- regression parameter estimate plots
@@ -1666,7 +1681,7 @@ Weights (if using weighted regression) <A href=\"weights.txt\">here</A>
 
 Raw regression output <A href=\"script-output.txt\">here</A>
 
-Processed regression output raw <A href=\"raw-regression.txt\">here</A>, raw low standard error only <A href=\"low-se.txt\">here</A>, raw low standard error and non-collinear only <A href=\"low-se-non-collinear.txt\">here</A>,
+Processed regression output raw <A href=\"raw-regression.txt\">here</A>, same but removing high standard error only <A href=\"low-se.txt\">here</A>, same removing non-collinear <A href=\"low-se-non-collinear.txt\">here</A>, same removing when one strain involved in all pairs <A href=\"low-se-non-collinear-gt1strain.txt\">here</A>
    (substitution, estimate of antigenic effect, SE)
 
 Pairs involved in each substitution <A href=\"substs-details.html\">here</A>
