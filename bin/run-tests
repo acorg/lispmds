@@ -1,0 +1,44 @@
+#!/bin/sh
+
+# Run the LispMDS gui.
+
+# Default LispMDS and ACL installed directories.
+lisp_dir=/usr/local/lispmds
+acl80_dir=/usr/local/acl80
+
+basename=`basename $0`
+
+# Use a default value for MDS_ROOT, unless the user has already set it.
+if [ -z "$MDS_ROOT" ]
+then
+    if [ -d "$lisp_dir" ]
+    then
+        export MDS_ROOT="$lisp_dir"
+    else
+        echo "$basename: You have no MDS_ROOT environment variable and LispMDS is not installed in $lisp_dir" >&2
+        exit 1
+    fi
+fi
+
+# Use the .clinit.cl file in the LispMDS repo, unless the user has one in $HOME.
+if [ -f $HOME/.clinit.cl ]
+then
+    clinit=$HOME/.clinit.cl
+else
+    clinit="$MDS_ROOT/.clinit.cl"
+fi
+
+# Try to find alisp, if it's not already in the user's PATH.
+alisp="`type --path alisp`"
+if [ -z "$alisp" ]
+then
+    if [ -f "$acl80_dir/alisp" ]
+    then
+        alisp="$acl80_dir/alisp"
+    else
+        echo "$basename: could not find alisp in your path, or in $acl80_dir" >&2
+        exit 2
+    fi
+fi
+
+$alisp -e '(progn (load "'$clinit'") (load "'$MDS_ROOT'/src/mds/test/run"))'

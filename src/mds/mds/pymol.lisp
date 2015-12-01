@@ -221,9 +221,10 @@
 	  (pymol-format save :filename save-filename :if-exists :supersede))
 
     (run-shell-command (format nil 
-			       "~a~a -d \"run ~a\" -d \"abl optionsFile=~a~{, ~a~}\"" 
+			       "~a~a ~a -d \"run ~a\" -d \"abl optionsFile=~a~{, ~a~}\"" 
 			       (if (running-on-windows-p) "" "exec ")
 			       *pymol-executable-filename*
+                               (if (sys:getenv "MDS_PYMOL_FORCE_MONO") "-M" "")
 			       (if (running-on-windows-p) 
 				   (make-windows-lisp-filename-passable-as-argument *pymol-map-viewer-plugin-filename*)
 				 *pymol-map-viewer-plugin-filename*)
