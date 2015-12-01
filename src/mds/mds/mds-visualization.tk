@@ -1878,6 +1878,13 @@ menu .save-button.menu -tearoff 0
     }
 }
 
+.save-button.menu add command -label "error line lengths" -command {
+    set filename [getSaveFilename "Enter filename in which to save error line lengths"]
+    if {!($filename == "")} {
+	tolisp "(output-names-and-error-line-lengths-table-and-map $lisp_tk_stream_number \"$filename\")"
+    }
+}
+
 .save-button.menu add command -label "strain names (all or selected strains)" -command {
     set filename [getSaveFilename "Enter filename in which to save strain names of all (or selected) points"]
     if {(!($filename == ""))} {

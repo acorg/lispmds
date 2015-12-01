@@ -55,7 +55,7 @@ replaced below, to also handle >'s
 		      t)
 		  (error "got a thresholded value, ~a, that was not in the form <X where X is a number" x)))))
       ans)))
-|#
+||#
 
 (defun gt-threshold-p (x)
   (and (thresholdp x)
