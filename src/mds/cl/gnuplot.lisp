@@ -739,9 +739,7 @@ i now think it might have to do with clipping, this function replaced below
 ;;;                      hardcopy (ps and gif and jpg)
 ;;;----------------------------------------------------------------------
 
-(defun gnuplot-hardcopy (&optional fontsize (filename "/home/dsmith/misc/ps/xy.ps") (size 1.0) (postscript-mode "eps"))
-  (if (string-equal (aref filename 0) "~")
-      (error "filename must not start with tilde"))
+(defun gnuplot-hardcopy (&optional fontsize (filename "~/misc/ps/xy.ps") (size 1.0) (postscript-mode "eps"))
   (if filename (gnuplot-command "set out ~s" filename))
   (gnuplot-command "set size ~d,~d" size size)
   ;; NOTE DOING EPS as the postscript-mode 1/2s THE SIZE, and gives us encapsulated PS
@@ -751,7 +749,7 @@ i now think it might have to do with clipping, this function replaced below
   (gnuplot-command "set te x11")
   (gnuplot-command "rep"))
 
-(defun gnuplot-gif (&optional fontsize (filename "/home/dsmith/misc/ps/xy.ps"))
+(defun gnuplot-gif (&optional fontsize (filename "~/misc/ps/xy.ps"))
   (format t "~2%Warning: these gifs do not display in firefox or netscape, use gnuplot-png instead.~%")
   ;; (in gnuplot 3.7, we should be able to go directly to gif)
   ;; doing landscape gives us the same aspect ratio as what we see on the screen, 
@@ -761,13 +759,13 @@ i now think it might have to do with clipping, this function replaced below
   (sleep 1)
   ;; uncomment here to make solid lines
   (progn
-    (run-shell-command-and-wait "mv -f /home/dsmith/misc/ps/xy.ps /home/dsmith/misc/ps/xy.ps.old")
-    (run-shell-command-and-wait "perl -pe \"s/Solid false/Solid true/\" /home/dsmith/misc/ps/xy.ps.old > /home/dsmith/misc/ps/xy.ps"))
+    (run-shell-command-and-wait "mv -f ~/misc/ps/xy.ps ~/misc/ps/xy.ps.old")
+    (run-shell-command-and-wait "perl -pe \"s/Solid false/Solid true/\" ~/misc/ps/xy.ps.old > ~/misc/ps/xy.ps"))
   (sleep 1)
   (run-shell-command-and-wait (format nil "mogrify -rotate 90 -format gif ~a" filename))
   )
 
-(defun gnuplot-png (&optional fontsize (filename "/home/dsmith/misc/ps/xy.ps") (size 1.0) 
+(defun gnuplot-png (&optional fontsize (filename "~/misc/ps/xy.ps") (size 1.0) 
                     &key (sleep-amount-after-gnuplot-hardcopy   2)
                          (sleep-amount-after-making-lines-solid 1))
   ;; (in gnuplot 3.7, we should be able to go directly to gif)
@@ -784,7 +782,7 @@ i now think it might have to do with clipping, this function replaced below
   (run-shell-command (format nil "mogrify -rotate 90 -format png ~a" filename))
   )
 
-(defun gnuplot-jpg (&optional fontsize (filename "/home/dsmith/misc/ps/xy.ps"))
+(defun gnuplot-jpg (&optional fontsize (filename "~/misc/ps/xy.ps"))
   ;; doing landscape gives us the same aspect ratio as what we see on the screen, 
   ;; and the same size (eps 1/2s the size), but we need to make 0.75 size, so smaller gifs, 
   ;; and to rotate back to portrait with the mogrify

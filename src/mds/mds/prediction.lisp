@@ -220,7 +220,7 @@
 (defun make-proportion-of-table-values-dont-cares (table proportion)
   (f-hi-table
    (^ (e)
-      (if (dont-care-p e)
+      (if (true-dont-care-p e)
 	  e
 	(if (< (knuth-random) proportion)
 	    'dont-care

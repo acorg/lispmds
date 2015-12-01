@@ -2248,6 +2248,57 @@ not separated into separate function, as for large table we overflow the memory 
 			  (dps (e-dist a-coords b-coords) 8)))))))
 
 
+
+(defun output-names-and-error-line-lengths-table-and-map (mds-window filename)
+  ;; error line lengths (derivative from output-names-and-distances-from-table-and-map)
+  (with-open-file (out filename :direction :output 
+		   :if-exists :supersede
+		   :if-does-not-exist :create)
+    (let* ((hi-table (get-hi-table (get-table-window-for-mds-window mds-window)))
+	   (similarity-table-p (similarity-table-p hi-table))
+	   (mds-coordss (get-mds-coordss mds-window))
+	   (coordss (coordss mds-coordss))
+	   (col-bases (col-bases mds-coordss)))
+      (format out ";; Error line lengths ~a~%;; This file created at ~a~%~%" 
+	      (hi-table-name hi-table)
+	      (time-and-date))
+      (format out ";; Antigen       Serum         Table distance   Map distance  Error line length (negative if map-distance shorter than table distance)~%~%")
+      (loop for (a-name . rest-names) on (hi-table-antigens hi-table) 
+	  for (a-coords . rest-coordss) on coordss 
+	  for row-values in (hi-table-values hi-table) 
+	  for antigen-number from 0 do
+	    (loop for b-name in rest-names 
+		for b-coords in rest-coordss 
+		for value in (nthcdr (inc antigen-number) row-values) 
+		for serum-number from (inc antigen-number) 
+                when (and (ag-name-p a-name)
+                          (sr-name-p b-name)
+                          '(not (dont-care-p value)))
+                do
+                  (let* ((table-distance (if similarity-table-p 
+                                             (cond ((numberp value) (- (nth serum-number col-bases) value))
+                                                   ((thresholdp value) (read-from-string 
+                                                                        (format nil ">~d" 
+                                                                                (coerce (nth serum-number col-bases) 'single-float))))
+                                                   ((true-dont-care-p value) '*)
+                                                   (t value))
+                                           value))
+                         (map-distance (dps (e-dist a-coords b-coords) 8))
+                         (error-line-length (cond ((numberp  table-distance) (- map-distance table-distance))
+                                                  ((eql '*   table-distance) '*)
+                                                  ((equal #\> (aref (string table-distance) 0)) 
+                                                   (let ((table-distance-threshold (read-from-string (substring (string table-distance) 1))))
+                                                     (if (> map-distance table-distance-threshold)
+                                                         0
+                                                       (- map-distance table-distance-threshold))))
+                                                  (t (error "Unexpected case")))))
+                    (format out "~{~16a ~}~10f      ~10f      ~10f~%" 
+                            (list a-name b-name)
+                            table-distance
+                            map-distance
+                            error-line-length)))))))
+
+
 ;;;----------------------------------------------------------------------
 ;;;                    output distance matrix
 ;;;----------------------------------------------------------------------
