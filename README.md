@@ -156,9 +156,9 @@ not be linked in and starting pymol from the MDS gui will not work.
 
 ```
 $ brew tap homebrew/dupes
-$ brew install homebrew/dupes/tcl-tk --enable-threads --with-x11
+$ brew install homebrew/dupes/tcl-tk --with-threads --with-x11
 $ brew link -f --overwrite tcl-tk
-$ brew install python --with-tcl-tk --enable-threads --with-x11
+$ brew install python --with-tcl-tk --with-threads --with-x11
 $ brew linkapps python
 
 $ brew install gnuplot --with-x11
