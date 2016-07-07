@@ -145,7 +145,7 @@ accept the license and for your password.
 
 ```
 $ brew cask install Caskroom/cask/xquartz
-$ open /opt/homebrew-cask/Caskroom/xquartz/*/XQuartz.pkg
+$ open /usr/local/Caskroom/xquartz/*/XQuartz.pkg
 ```
 
 ## Install tools via brew
