@@ -141,11 +141,15 @@ running if brew needs to create `/opt/homebrew-cask`.
 
 The second command below will present you a normal Mac OS X dialog to
 install the XQuartz application that brew downloaded.  You'll be asked to
-accept the license and for your password.
+accept the license and for your password. Note that the path name
+`/opt/homebrew-cask/Caskroom/xquartz/2.7.9/XQuartz.pkg` may differ for
+you. The first command will print a line like `xquartz staged at
+'/opt/homebrew-cask/Caskroom/xquartz/2.7.9' (73M)` which tells you the
+directory where the `XQuartz.pkg` file is.
 
 ```
 $ brew cask install Caskroom/cask/xquartz
-$ open /usr/local/Caskroom/xquartz/*/XQuartz.pkg
+$ open /opt/homebrew-cask/Caskroom/xquartz/2.7.9/XQuartz.pkg
 ```
 
 ## Install tools via brew
