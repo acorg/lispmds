@@ -9,8 +9,10 @@ developed at the
 
 # Installation on Mac OS X via brew
 
-The following is known to work on OS X Yosemite 10.10.2. We do not yet have
-installation instructions for other flavors of UNIX or other operating systems.
+The following is known to work on OS X Yosemite (10.10.2), Sierra (10.12),
+and likely other OS X versions close to those. We do not yet have
+installation instructions for other flavors of UNIX or other operating
+systems.
 
 These instructions also assume you're using the `bash` shell. If you have
 no idea what that means, relax - you're probably using bash.
