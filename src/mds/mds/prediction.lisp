@@ -189,7 +189,7 @@
      (reverse prediction-errors-details)
      (av (mapcar #'abs prediction-errors))
      (sd prediction-errors)
-     (correlation (mapcar #'cdddr prediction-errors-details)))))
+     (correlation (mapcar #'cdddr (filter (^ (l) (eql 'non-because-master-is-threshold (nth 2 l))) prediction-errors-details))))))
 
 (defun predictions-from-tables (master-table prediction-table predicted-coordss)
   (if (not (and (equal (hi-table-antigens master-table)     (hi-table-sera master-table))
