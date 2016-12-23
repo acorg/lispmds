@@ -4,6 +4,7 @@
 (defun merge-tables (tables &optional &key 
 				      (table-output-stream t)
 				      filename
+                                      (sort-hi-table-names t)
 				      (if-exists-action :error)
 				      (num-dims 2)
 				      ;;(multiple-values-f #'geometric-average-multiples-unless-sd-gt-1-ignore-thresholded-unless-only-entries-then-min-threshold)
@@ -11,18 +12,26 @@
   ;; should work for a single table, and if that table has duplicate rows (or cols?) should merge them (does the new-new-new- etc bullshit merge do the row unification?)
   (if filename
       (with-open-file (out filename :direction :output :if-exists if-exists-action)
-	(merge-tables tables :table-output-stream out :num-dims num-dims :multiple-values-f multiple-values-f))
-    (let* ((merge (hi-table-sort-strains
-		   (merge-hi-tables 
-		    tables
-		    multiple-values-f
-		    'zmerged)))
-	   (diagnostic-merge (hi-table-sort-strains
-			      (merge-hi-tables 
-			       (append tables (list merge))
-			       #'list-multiples
-			       'diagnostic-merge
-			       t)))
+	(merge-tables tables 
+                      :table-output-stream out
+                      :sort-hi-table-names sort-hi-table-names
+                      :num-dims num-dims
+                      :multiple-values-f multiple-values-f))
+    (let* ((merge (let ((merge (merge-hi-tables 
+                                tables
+                                multiple-values-f
+                                'zmerged)))
+                    (if sort-hi-table-names 
+                        (hi-table-sort-strains merge)
+                      merge)))
+	   (diagnostic-merge (let ((merge (merge-hi-tables 
+                                           (append tables (list merge))
+                                           #'list-multiples
+                                           'diagnostic-merge
+                                           t)))
+                               (if sort-hi-table-names
+                                   (hi-table-sort-strains merge)
+                                 merge)))
            (diagnostic-merge-merged-rows-and-cols-only (extract-hi-table-by-removing-non-merged-rows-and-columns diagnostic-merge)))
     
       (if table-output-stream
