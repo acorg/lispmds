@@ -304,6 +304,22 @@
 	(if (eql char (aref string i))
 	    (return i))))
 
+
+
+(defun substring-after-string (part full)
+  (let ((p (string-member part full)))
+    (if p 
+	(substring full (+ p (length part)))
+      nil)))
+
+(defun substring-before-string (part full)
+  (let ((p (string-member part full)))
+    (if p 
+	(substring full 0 (inc (- p (length part))))
+      nil)))
+
+
+
 (defun string-subst-string (from to string &optional &key all-occurrences)
   ;;this works on from and to being strings, string-subst works on from and to being characters
   (let ((string-member (string-member from string)))

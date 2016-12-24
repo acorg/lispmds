@@ -322,7 +322,7 @@
 (year-by-year-distances 
  :save-or-filename save
  :clusters-or-filename clusters
- :root-strain 'pc173-ag
+ :root-strain 'BI/16190/68-ag
  :show-plot t)
 			
 (tk-put 1 ".c postscript -file mds/investigations/shape-sequence/ms-figs/season-by-season-antigenic.ps") 

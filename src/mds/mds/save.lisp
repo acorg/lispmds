@@ -477,14 +477,15 @@
   (let* ((table-from-save 
 	  (table-from-save save-form))
          (tables-to-merge
-          (setq foo (append
+          (append
            (if (and remerge-from-original-tables (pre-merge-tables-from-save save-form))
                (pre-merge-tables-from-save save-form)
              (list (un-asl-hi-table table-from-save)))
-           (list (un-asl-hi-table extending-table)))))
+           (list (un-asl-hi-table extending-table))))
 	 (merged-table 
 	  (table-from-save 
 	   (merge-tables tables-to-merge
+                         :sort-hi-table-names nil
 			 :filename merge-diagnostics-filename
 			 :if-exists-action if-exists-action)))
 	 (save-form-subset (subset-save-form
@@ -1069,6 +1070,24 @@
      save
      :coords-colors coords-colors
      :not-found-action not-found-action)))
+
+(defun set-save-coords-colors-alist (save full-name-color-alist &optional &key (not-found-action :error))
+  ;; should check that all names in the alist are in the save, but am not right now
+  (if (plot-spec-from-save save)
+      (set-plot-spec-in-save
+       save
+       (let ((plot-spec (plot-spec-from-save save))
+	     (table-names (hi-table-antigens (table-from-save save))))
+	 (if plot-spec
+	     (loop for line in plot-spec 
+		 for table-name in table-names collect
+		   (if (not (equal table-name (car line)))
+		       (error "Currently, plot spec order must be same as table order")
+		     (if (assoc table-name full-name-color-alist)
+                         (subst-keyword-arg :co line (assoc-value-1 table-name full-name-color-alist) :not-found-action :add)
+                       line)))
+	   '((default :wn "")))))
+    (error "No plot-spec in save, currently must exist, though is easy to create one")))
 
 (defun set-save-coords-name-colors (save coords-name-colors &optional &key (not-found-action :error))
   (set-save-keyword-entry
