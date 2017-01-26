@@ -130,9 +130,15 @@ class ACmap:
                 if options['procrustes lines compute']:
                     if 'procrustes lines' not in cgoData:
                         cgoData['procrustes lines'] = independentPymolCgoGroup(options['cgo prefix'] + options['procrustes lines cgo name'])
-                    cgoData['procrustes lines'].setColor(options['procrustes lines color'])
+                    # dfb see if there are some other attributes defined with the point dict. 
+                    # dfb line colouring
+                    if 'procrustes color' in point:
+                         cgoData['procrustes lines'].setColor(point['procrustes color'])
+                    # make line 
                     cgoData['procrustes lines'].setLineWidth(options['procrustes lines width'])
                     cgoData['procrustes lines'].addLine(pointCoords, pointProcrustesCoords)
+                    # dfb reset to default colouring for remaining lines 
+                    cgoData['procrustes lines'].setColor(options['procrustes lines color'])
                     if self.bb:
                         self.bb.add(pointProcrustesCoords)
 
