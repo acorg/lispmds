@@ -145,7 +145,7 @@
                             when (not (zerop independent-variable-value))
                             collect
 			      (let ((independent-variable-coefficient (assoc-value-1 independent-variable-name coefficients)))
-                                hd  ;; to stop compiler bitching
+                                hd  ;; to stop compiler complaining
                                 (list independent-variable-name
                                       independent-variable-value
                                       independent-variable-coefficient))))
@@ -1213,7 +1213,7 @@ output <A href="../../../projects/dan/locations-only.html">here</A>
 	(mutation-names (nthcdr 4 (car n-mutation-list))))
     (loop for (strain1 strain2 antigenic-distance hamming-distance . mutations) in (cdr n-mutation-list) do
 	  (progn
-	    strain1 strain2 hamming-distance  ;; to keep the compiler from bitching
+	    strain1 strain2 hamming-distance  ;; to keep the compiler from complaining
 	    (let ((mutations-names (loop for mutation-name in mutation-names
 				       for mutation in mutations
 				       when (not (zerop mutation))

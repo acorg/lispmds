@@ -1122,7 +1122,7 @@
 		 (loop for (ignore-name . rest) in plot-spec 
 		     for new-name in new-names collect
 		       (let ((new-name-without-suffix-if-suffix (if (ag-or-sr-name-p new-name) (remove-ag-sr-from-name new-name) new-name)))
-			 ignore-name  ;; to stop the compiler bitching
+			 ignore-name  ;; to stop the compiler complaining
 			 (cons new-name
 			       (let ((interim-rest (subst-keyword-arg :nm rest (string new-name-without-suffix-if-suffix) :not-found-action :ignore)))
 				 (if (equal "" (snoop-keyword-arg :wn rest))

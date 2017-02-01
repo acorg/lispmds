@@ -1156,7 +1156,7 @@
                               when (assoc (car mutation-names) regression-run)
                               collect
                                 (progn
-                                  sd n ;; to stop compiler bitching
+                                  sd n ;; to stop compiler complaining
                                   (list 
                                    av
                                    (let ((regression-entry (assoc (car mutation-names) regression-run)))
@@ -1185,7 +1185,7 @@
                               when (and (>= n 2)
                                         (assoc (car mutation-names) regression-run))
                               collect (progn
-                                        sd n ;; to stop the compiler bitching
+                                        sd n ;; to stop the compiler complaining
                                         (list 
                                          av
                                          (let ((regression-entry (assoc (car mutation-names) regression-run)))
@@ -1214,7 +1214,7 @@
                               when (and (>= n 5)
                                         (assoc (car mutation-names) regression-run))
                               collect (progn
-                                        sd n ;; to stop the compiler bitching
+                                        sd n ;; to stop the compiler complaining
                                         (list 
                                          av
                                          (let ((regression-entry (assoc (car mutation-names) regression-run)))
@@ -1246,7 +1246,7 @@
                               when (assoc (car mutation-names) regression-run)
                               collect
                                 (progn
-                                  sd n ;; to stop compiler bitching
+                                  sd n ;; to stop compiler complaining
                                   (list 
                                    av
                                    (parameter-estimate-including-intercpet (car mutation-names) regression-run model))))))
@@ -1274,7 +1274,7 @@
                               when (and (>= n 2)
                                         (assoc (car mutation-names) regression-run))
                               collect (progn
-                                        sd n ;; to stop the compiler bitching
+                                        sd n ;; to stop the compiler complaining
                                         (list 
                                          av
                                          (parameter-estimate-including-intercpet (car mutation-names) regression-run model))))))
@@ -1302,7 +1302,7 @@
                               when (and (>= n 5)
                                         (assoc (car mutation-names) regression-run))
                               collect (progn
-                                        sd n ;; to stop the compiler bitching
+                                        sd n ;; to stop the compiler complaining
                                         (list 
                                          av
                                          (parameter-estimate-including-intercpet (car mutation-names) regression-run model))))))

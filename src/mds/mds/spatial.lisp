@@ -444,7 +444,7 @@
 										      (reference-strains 'not-passed) 
 										      marked 
 										      intermediate-marked)
-  reference-strains ;; to stop the compiler bitching
+  reference-strains ;; to stop the compiler complaining
   (set-plot-spec-in-save
    save
    (loop for psline in (plot-spec-from-save save) collect
@@ -473,7 +473,7 @@
 												 (reference-strains 'not-passed) 
 												 marked 
 												 intermediate-marked)
-  reference-strains ;; to stop the compiler bitching
+  reference-strains ;; to stop the compiler complaining
   (set-plot-spec-in-save
    save
    (loop for psline in (plot-spec-from-save save) collect
@@ -511,7 +511,7 @@
 												 (reference-strains 'not-passed) 
 												 marked 
 												 intermediate-marked)
-  reference-strains ;; to stop the compiler bitching
+  reference-strains ;; to stop the compiler complaining
   (set-plot-spec-in-save
    save
    (loop for psline in (plot-spec-from-save save) collect

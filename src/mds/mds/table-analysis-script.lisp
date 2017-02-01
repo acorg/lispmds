@@ -205,7 +205,7 @@
 										   (reference-strains 'not-passed) 
 										   marked 
 										   intermediate-marked)
-  reference-strains ;; to stop the compiler bitching
+  reference-strains ;; to stop the compiler complaining
   (set-plot-spec-in-save
    save
    (loop for psline in (plot-spec-from-save save) collect
@@ -224,7 +224,7 @@
    :not-found-action :add))
 
 (defun color-code-epi-medium-reference-background-strongest-marked (save &optional &key (reference-strains 'not-passed) marked)
-  reference-strains ;; to stop the compiler bitching
+  reference-strains ;; to stop the compiler complaining
   (set-plot-spec-in-save
    save
    (loop for psline in (plot-spec-from-save save) collect
@@ -241,7 +241,7 @@
    :not-found-action :add))
 
 (defun color-code-epi-strong-reference-background-strongest-marked-larger (save &optional &key (reference-strains 'not-passed) marked)
-  reference-strains ;; to stop the compiler bitching
+  reference-strains ;; to stop the compiler complaining
   (set-plot-spec-in-save
    save
    (loop for psline in (plot-spec-from-save save) collect
@@ -258,7 +258,7 @@
    :not-found-action :add))
 
 (defun color-code-epi-strong-4-reference-background-strongest-marked-larger (save &optional &key (reference-strains 'not-passed) marked)
-  reference-strains ;; to stop the compiler bitching
+  reference-strains ;; to stop the compiler complaining
   (set-plot-spec-in-save
    save
    (loop for psline in (plot-spec-from-save save) collect
