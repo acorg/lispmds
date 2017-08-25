@@ -90,15 +90,14 @@ $ sudo chown -R $USER /usr/local/share /usr/local/lib
 
 ## ~~Install~~ ~~Caskroom~~
 
-This step is redundant in 10.12, cask is intalled with homebrew initially.
+This step is redundant in 10.12, cask is installed with homebrew initially.
 And caskroom.io domain has been taken.
 
-We make use of brew [Caskroom](http://caskroom.io/), so you'll need that
-too:
-
-```
-$ brew install caskroom/cask/brew-cask
-```
+> We make use of brew [Caskroom](http://caskroom.io/), so you'll need that too:
+>
+> ```
+> $ brew install caskroom/cask/brew-cask
+> ```
 
 
 ## Set up your shell environment
