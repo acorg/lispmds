@@ -90,12 +90,16 @@ $ sudo chown -R $USER /usr/local/share /usr/local/lib
 
 ## Install Caskroom
 
-We make use of brew [Caskroom](http://caskroom.io/), so you'll need that
+This step is redundant in 10.12, cask is intalled with homebrew initially.
+And caskroom.io domain was taken.
+
+~~We make use of brew [Caskroom](http://caskroom.io/), so you'll need that
 too:
 
 ```
 $ brew install caskroom/cask/brew-cask
 ```
+~~
 
 ## Set up your shell environment
 
@@ -144,14 +148,13 @@ running if brew needs to create `/opt/homebrew-cask`.
 The second command below will present you a normal Mac OS X dialog to
 install the XQuartz application that brew downloaded.  You'll be asked to
 accept the license and for your password. Note that the path name
-`/opt/homebrew-cask/Caskroom/xquartz/2.7.9/XQuartz.pkg` may differ for
-you. The first command will print a line like `xquartz staged at
-'/opt/homebrew-cask/Caskroom/xquartz/2.7.9' (73M)` which tells you the
-directory where the `XQuartz.pkg` file is.
+`/usr/local/Caskroom/xquartz/2.7.11/XQuartz.pkg` may differ for
+you. You may try to run `find /usr/local/Caskroom -name XQuartz.pkg`
+to find where the `XQuartz.pkg` file is.
 
 ```
 $ brew cask install Caskroom/cask/xquartz
-$ open /opt/homebrew-cask/Caskroom/xquartz/2.7.9/XQuartz.pkg
+$ open /usr/local/Caskroom/xquartz/2.7.11/XQuartz.pkg
 ```
 
 ## Install tools via brew
@@ -160,12 +163,14 @@ Pay particular attention to the `$ brew link -f --overwrite tcl-tk` in the
 following. If it fails or gives any kind of warning or error, `wish` will
 not be linked in and starting pymol from the MDS gui will not work.
 
+brew linkapps is deprecated. python should be perhaps installed via cask.
+
 ```
 $ brew tap homebrew/dupes
 $ brew install homebrew/dupes/tcl-tk --with-threads --with-x11
 $ brew link -f --overwrite tcl-tk
 $ brew install python --with-tcl-tk --with-threads --with-x11
-$ brew linkapps python
+$ # brew linkapps python - deprecated, do not run!
 
 $ brew install gnuplot --with-x11
 $ brew install imagemagick
@@ -201,26 +206,29 @@ It may be that your pymol relies on an older version of the GLEW library
 ```
 $ pymol
 Traceback (most recent call last):
-  File "/usr/local/Cellar/pymol/1.7.4.0/libexec/lib/python2.7/site-packages/pymol/__init__.py", line 71, in <module>
+  File "/usr/local/Cellar/pymol/1.8.4.0/libexec/lib/python2.7/site-packages/pymol/__init__.py", line 71, in <module>
     import pymol
-  File "/usr/local/Cellar/pymol/1.7.4.0/libexec/lib/python2.7/site-packages/pymol/__init__.py", line 533, in <module>
+  File "/usr/local/Cellar/pymol/1.8.4.0/libexec/lib/python2.7/site-packages/pymol/__init__.py", line 533, in <module>
     import pymol._cmd
-ImportError: dlopen(/usr/local/Cellar/pymol/1.7.4.0/libexec/lib/python2.7/site-packages/pymol/_cmd.so, 2): Library not loaded: /usr/local/lib/libGLEW.1.11.0.dylib
-  Referenced from: /usr/local/Cellar/pymol/1.7.4.0/libexec/lib/python2.7/site-packages/pymol/_cmd.so
+ImportError: dlopen(/usr/local/Cellar/pymol/1.8.4.0/libexec/lib/python2.7/site-packages/pymol/_cmd.so, 2): Library not loaded: /usr/local/lib/libGLEW.2.0.0.dylib
+  Referenced from: /usr/local/Cellar/pymol/1.8.4.0/libexec/lib/python2.7/site-packages/pymol/_cmd.so
   Reason: image not found
 ```
 
-you'll need to install version 1.11 of GLEW manually. Go to
-[the download page for GLEW 1.11](http://sourceforge.net/projects/glew/files/glew/1.11.0/)
-and download the `glew-1.11.0.tgz` file. Then:
+you'll need to install version 2.0.0 of GLEW manually. Then:
 
 ```
 $ cd /tmp
-$ tar xfz ~/Downloads/glew-1.11.0.tgz
-$ cd glew-1.11.0
+$ curl -OL http://downloads.sourceforge.net/project/glew/glew/2.0.0/glew-2.0.0.tgz
+$ tar xf glew-2.0.0.tgz
+$ cd glew-2.0.0
 $ make
 $ sudo make install
 ```
+
+If curl command above fails, you may need to download glew-2.0.0.tgz manually,
+go to [the download page for GLEW 2.0.0](https://sourceforge.net/projects/glew/files/glew/2.0.0/)
+and download the `glew-2.0.0.tgz` file.
 
 After this, you should be able to run `pymol` successfully.
 
