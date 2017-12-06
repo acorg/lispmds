@@ -2213,7 +2213,7 @@ not separated into separate function, as for large table we overflow the memory 
 |#
 
 
-(defun output-names-and-distances-from-table-and-map (mds-window filename)
+(defun output-names-and-distances-from-table-and-map (mds-window filename &optional &key numeric-table-distances-only)
   ;; table and map distances (combining the two above)
   (with-open-file (out filename :direction :output 
 		   :if-exists :supersede
@@ -2234,8 +2234,10 @@ not separated into separate function, as for large table we overflow the memory 
 	    (loop for b-name in rest-names 
 		for b-coords in rest-coordss 
 		for value in (nthcdr (inc antigen-number) row-values) 
-		for serum-number from (inc antigen-number) do
-		  (format out "~{~16a ~}~10f      ~10f~%" 
+		for serum-number from (inc antigen-number) 
+		when (and numeric-table-distances-only (numberp value))
+		do
+		  (format out "~{~40a ~}~10f      ~10f~%" 
 			  (sort-strains (list a-name b-name))
 			  (if similarity-table-p 
 			      (cond ((numberp value) (- (nth serum-number col-bases) value))
