@@ -55,6 +55,7 @@ menu .buttons.dim-anneal.menu -tearoff 0
 .buttons.dim-anneal.menu add command -label "dim anneal two-phase (10 runs)" -command {tolisp "(run-from-batch-runs-ui-window $lisp_tk_stream_number :num-runs 10 :dim-anneal-f 'lisp-dim-anneal-two-phase           )"}
 .buttons.dim-anneal.menu add command -label "dim anneal two-phase (25 runs)" -command {tolisp "(run-from-batch-runs-ui-window $lisp_tk_stream_number :num-runs 25 :dim-anneal-f 'lisp-dim-anneal-two-phase           )"}
 .buttons.dim-anneal.menu add command -label "dim anneal two-phase (100 runs)" -command {tolisp "(run-from-batch-runs-ui-window $lisp_tk_stream_number :num-runs 100 :dim-anneal-f 'lisp-dim-anneal-two-phase           )"}
+.buttons.dim-anneal.menu add command -label "dim anneal two-phase (500 runs)" -command {tolisp "(run-from-batch-runs-ui-window $lisp_tk_stream_number :num-runs 500 :dim-anneal-f 'lisp-dim-anneal-two-phase           )"}
 #.buttons.dim-anneal.menu add command -label "c da: two phase (3 runs)      " -command {tolisp "(run-from-batch-runs-ui-window $lisp_tk_stream_number :num-runs 3 :c-dim-anneal-f 'dim-anneal-two-phase           )"}
 #.buttons.dim-anneal.menu add command -label "c da: short steps (3 runs)" -command {tolisp "(run-from-batch-runs-ui-window $lisp_tk_stream_number :num-runs 3 :c-dim-anneal-f 'dim-anneal-short-steps         )"}
 #.buttons.dim-anneal.menu add command -label "c da: long steps (3 runs)" -command {tolisp "(run-from-batch-runs-ui-window $lisp_tk_stream_number :num-runs 3 :c-dim-anneal-f 'dim-anneal-long-steps          )"}
