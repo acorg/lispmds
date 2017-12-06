@@ -1669,7 +1669,7 @@ proc set-canvasToMdsScaleFactor-and-update-rules {scaleFactor} {
 ###                  SAVE TO A FILE and READ FROM FILE
 ###----------------------------------------------------------------------
 
-set initialDir "mds/investigations/"
+set initialDir "Desktop/"
 set initialFile ""   ;# unfortunately not accepted by tk_getOpenFile (why?)
 
 proc getSaveFilenameWithType {title types} {
@@ -1868,6 +1868,13 @@ menu .save-button.menu -tearoff 0
     set filename [getSaveFilename "Enter filename in which to save distances (this may take a while...)"]
     if {!($filename == "")} {
 	tolisp "(output-names-and-distances-from-table-and-map $lisp_tk_stream_number \"$filename\")"
+    }
+}
+
+.save-button.menu add command -label "distances from table and map (numeric titers only)" -command {
+    set filename [getSaveFilename "Enter filename in which to save distances (this may take a while...)"]
+    if {!($filename == "")} {
+	tolisp "(output-names-and-distances-from-table-and-map $lisp_tk_stream_number \"$filename\" :numeric-table-distances-only t)"
     }
 }
 

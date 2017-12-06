@@ -4,10 +4,15 @@
 ;;;                      save configuration
 ;;;----------------------------------------------------------------------
 
-(defun write-save-form (save-form filename &optional &key (if-exists :error))
+(defun write-save-form (save-form filename &optional &key (if-exists :supersede))
+;;(save-form filename (if (member (user-name) '("stefan") (if-exists :supersede))(if-exists :overwrite))) ;;this doesn't work..
+						     
+							     
   (with-open-file (out filename :direction :output 
 		   :if-exists if-exists
 		   :if-does-not-exist :create)
+    
+    
     (format out 
 	    ;;";; MDS configuration file (version 0.0).~%;; Created for ~a at ~a~%~%" 
 	    ;;";; MDS configuration file (version 0.1).~%;; Created for ~a at ~a~%~%"   v0.1 for ag-sr tables store as un-as table, saves 20x space 2002-02-08
@@ -1219,7 +1224,7 @@
 		 (loop for (ignore-name . rest) in plot-spec 
 		     for new-name in new-names collect
 		       (let ((new-name-without-suffix-if-suffix (if (ag-or-sr-name-p new-name) (remove-ag-sr-from-name new-name) new-name)))
-			 ignore-name  ;; to stop the compiler complaining
+			 ignore-name  ;; to stop the compiler bitching
 			 (cons new-name
 			       (let ((interim-rest (subst-keyword-arg :nm rest (string new-name-without-suffix-if-suffix) :not-found-action :ignore)))
 				 (if (equal "" (snoop-keyword-arg :wn rest))
