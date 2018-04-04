@@ -456,8 +456,10 @@
 	   (not (boundp '*pymol-executable-filename*)))
   (defvar *pymol-executable-filename*
       (cond ((probe-file "/usr/local/bin/pymol")                               "/usr/local/bin/pymol")
-            ((probe-file "/Applications/MacPyMOL.app/Contents/MacOS/PyMOL")    "/Applications/MacPyMOL.app/Contents/MacOS/PyMOL")
+            ((probe-file "/Applications/PyMOL.app/Contents/MacOS/MacPyMOL")    "/Applications/PyMOL.app/Contents/MacOS/MacPyMOL")
+            ((probe-file "/Applications/PyMOL.app/Contents/MacOS/PyMOL")       "/Applications/PyMOL.app/Contents/MacOS/PyMOL")
 	    ((probe-file "/Applications/MacPyMOL.app/Contents/MacOS/MacPyMOL") "/Applications/MacPyMOL.app/Contents/MacOS/MacPyMOL")
+            ((probe-file "/Applications/MacPyMOL.app/Contents/MacOS/PyMOL")    "/Applications/MacPyMOL.app/Contents/MacOS/PyMOL")
 	    (t (progn (format t "~2%    >>>>>  Warning: Pymol executable not in an expected place, either install pymol, or edit clinit.cl point to where it is already installed.~2%")
 		      "Pymol executable not in an expected place, either install pymol, or edit clinit.cl point to where it is already installed.")))))
     
