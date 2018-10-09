@@ -192,8 +192,7 @@ doesn't work, ask for help.
 LispMDS can interact with [PyMOL](https://www.pymol.org/). Set that up via:
 
 ```
-$ brew tap homebrew/science
-$ brew install pymol
+$ brew install brewsci/bio/pymol
 ```
 
 ### Check that pymol works
