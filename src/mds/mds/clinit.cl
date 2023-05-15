@@ -144,6 +144,7 @@
   ;;  (or (null home) ;; when starting from the franz desktop icon this is not set
   ;;	(eql #\: (aref home 1))))   ;; eg c:/ or f:/  (but from emacs on windows it is)
   (not (or (string-equal "Apple" (substring (software-type) 0 4))
+           (string-equal "Apple" (substring (software-type) 7 11))
            (string-equal "Linux" (substring (software-type) 0 4))))
        ;; need to generalize to all unix, or find what all windows report
   )
