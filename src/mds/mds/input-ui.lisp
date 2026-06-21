@@ -9,8 +9,10 @@
     (set-input-ui-tk tk)
     (tk-put tk "source ~s" (uw-sfnr "mds/input-ui.tk" :assertIsFile t))
     (let ((user (user-name)))
-      (cond ((equal user "terry")  (tk-put tk "set initialDir mds/investigations/merge-hi-tables/"))
-	    ((equal user "dsmith")  (tk-put tk "set initialDir mds/data/"))
+      (cond ((equal user "terry")     (tk-put tk "set initialDir mds/investigations/merge-hi-tables/"))
+	    ((equal user "dsmith")    (tk-put tk "set initialDir mds/data/"))
+	    ((equal user "stefan")    (tk-put tk "set initialDir ~/Desktop/"))
+	    ((equal user "mathilde")  (tk-put tk "set initialDir ~/Desktop/"))
 	    (t (tk-put tk "set initialDir mds/"))))
     ;; dead sparrow
     ;;(if (running-on-windows-p)

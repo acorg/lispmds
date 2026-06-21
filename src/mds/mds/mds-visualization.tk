@@ -1871,6 +1871,13 @@ menu .save-button.menu -tearoff 0
     }
 }
 
+.save-button.menu add command -label "distances from table and map (numeric titers only)" -command {
+    set filename [getSaveFilename "Enter filename in which to save distances (this may take a while...)"]
+    if {!($filename == "")} {
+	tolisp "(output-names-and-distances-from-table-and-map $lisp_tk_stream_number \"$filename\" :numeric-table-distances-only t)"
+    }
+}
+
 .save-button.menu add command -label "predictions" -command {
     set filename [getSaveFilename "Enter filename in which to save predictions"]
     if {!($filename == "")} {

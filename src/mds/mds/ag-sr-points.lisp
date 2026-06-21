@@ -647,10 +647,216 @@ Y_SR     .    .    .    .   ---
     (WY/3/03 F04008)          ;; derek added 2004-06-20 from table 86
     (WY/3-X-147/03 f04015)    ;; derek added 2005-03-16 from table 89
     (WY/3-X-147/03 f04016)    ;; derek added 2005-03-16 from table 89
-    ))
+    
+    
+    (HI/052/05 F06010)									;; Bjorn added 2012-05-01
+    (NL/363/06 F07017)									;; Bjorn added 2012-05-01
+    (NL/348/07 F08001)									;; Bjorn added 2012-05-01
+    (BR/010/07 F08003)									;; Bjorn added 2012-05-01
+    (NL/377/08 F08053)									;; Bjorn added 2012-05-01
+    (PE/016/09 F10005)									;; Perth, Bjorn added 2012-05-01
+    (NL/009/10 F10025)									;; Bjorn added 2012-05-01
+    (VI/210/09 F10027)									;; Bjorn added 2012-05-01
+    (NL/034/10 F11007)									;; Bjorn added 2012-05-01
+    (NL/063/11 F11021)									;; Bjorn added 2012-05-01
+       
+    
+;; H5 antisera
+
+    (A/Mallard/Netherlands/3A/1999 F10041)				;; Bjorn added 2011-10-15
+    (A/Mallard/Netherlands/3B/1999 F10042)				;; Bjorn added 2011-10-15
+    (A/Hongkong/156A/1997 F10045)						;; Bjorn added 2011-10-15
+    (A/Hongkong/156B/1997 F10046)						;; Bjorn added 2011-10-15
+    (A/Vietnam/1194A/2004 F10019)						;; Bjorn added 2011-10-15
+    (A/Vietnam/1194B/2004 F10020)						;; Bjorn added 2011-10-15
+    (A/Indonesia/5A/2005 F08032)						;; Bjorn added 2011-10-15
+    (A/Indonesia/5B/2005 F08033)						;; Bjorn added 2011-10-15
+    (A/Turkey/TurkeyA/1/2005 F08029)					;; Bjorn added 2011-10-15
+    (A/Turkey/TurkeyB/1/2005 F10017)					;; Bjorn added 2011-10-15
+    (A/Anhui/1A/2005 F08030)							;; Bjorn added 2011-10-15
+    (A/Anhui/1B/2005 F08031)							;; Bjorn added 2011-10-15
+    (A/Chicken/W-Java/EURRG30A/2007	F10015)				;; Bjorn added 2011-10-15
+    (A/Chicken/W-Java/EURRG30B/2007	F10016)				;; Bjorn added 2011-10-15
+    (A/Chicken/CentralJava_Kra/051A/2009 F11001)		;; Bjorn added 2011-10-15
+    (A/Chicken/CentralJava_Kra/051B/2009 F11002)		;; Bjorn added 2011-10-15
+    (A/Chicken/WestJava_Sbg/119A/2010 F11003)			;; Bjorn added 2011-10-15
+    (A/Chicken/WestJava_Sbg/119B/2010 F11004)			;; Bjorn added 2011-10-15
+    (A/Chicken/EastJava_Sgsr/121A/2010 F11005)			;; Bjorn added 2011-10-15
+    (A/Chicken/EastJava_Sgsr/121B/2010 F11006)			;; Bjorn added 2011-10-15
+    (A/Chicken/NorthSumatra_Mdn/072/2010 F11017)		;; Bjorn added 2011-10-15
+    (A/Duck/HongKong/205B/1977 F79109)					;; Bjorn added 2011-10-15
+    (A/Hongkong/156C/1997 F97016)						;; Bjorn added 2011-10-15
+    (A/Vietnam/1194C/2004 F08034)						;; Bjorn added 2011-10-15
+    (A/Indonesia/5C/2005 F10031)						;; Bjorn added 2012-01-31
+    (A/Indonesia/5D/2005 F10032)						;; Bjorn added 2012-01-31
+    (A/Indonesia/5E/2005 F10043)						;; Bjorn added 2012-01-31
+    (A/CHICKEN/SOUTHSULAWESIMAKASSAR/157A/2011 F12013)         ;;Bjorn added 2012-07-16
+    (A/CHICKEN/SOUTHSULAWESIMAKASSAR/157B/2011 F12014)         ;;Bjorn added 2012-07-16    
+    (A/CHICKEN/WESTJAVASUKABUMI/006A/2008 F12015)              ;;Bjorn added 2012-07-16
+    (A/CHICKEN/WESTJAVASUKABUMI/006B/2008 F12016)              ;;Bjorn added 2012-07-16
+
+;; H1 antisera
+
+    (A/NL/602A/09 F09035)								;; Bjorn added 2012-03-12
+    (A/NL/602B/09 F09036)								;; Bjorn added 2012-03-12
+    (A/Cal/004A/09 F09037)								;; Bjorn added 2012-03-12
+    (A/Cal/004B/09 F09038)								;; Bjorn added 2012-03-12
+    (A/Cal/007A/09 F10001)								;; Bjorn added 2012-03-12
+    (A/Cal/007B/09 F10002)								;; Bjorn added 2012-03-12
+    (A/NL/219A/11 F11011)								;; Bjorn added 2012-03-12
+    (A/NL/219B/11 F11012)								;; Bjorn added 2012-03-12
+    (A/NL/007A/10 F11013)								;; Bjorn added 2012-03-12
+    (A/NL/007B/10 F11014)								;; Bjorn added 2012-03-12
+    (A/NL/151A/11 F11019)								;; Bjorn added 2012-03-12
+    (A/NL/151B/11 F11020)								;; Bjorn added 2012-03-12
+    (A/NL/2001A/09 F11032)								;; Bjorn added 2012-03-12
+    (A/NL/2001B/09 F11033)  							;; Bjorn added 2012-03-12
+    
+    (A/NL/128/04 F05005)								;; Bjorn added 2012-05-15
+    (A/NCa/20/99 F05013)								;; Bjorn added 2012-05-15, New Caledonia
+    (A/SIs/3/06 F07008)									;; Bjorn added 2012-05-15, Solomon Islands
+    (A/BR/59/07 F08016)									;; Bjorn added 2012-05-15
+    (X-181A F10003)										;; Bjorn added 2012-05-15
+    (A/BY/7/95 F591)									;; Bjorn added 2012-05-15, Bayern
+    (A/USSR/92/77 F78036)								;; Bjorn added 2012-05-15
+    (A/BZ/11/78 F82012)									;; Bjorn added 2012-05-15
+    (A/CL/1/83 F84012)									;; Bjorn added 2012-05-15
+    (A/NJ/8/76 F86046)									;; Bjorn added 2012-05-15
+    (A/TA/1/86 F90018)									;; Bjorn added 2012-05-15
+    (A/TX/36/91 F96006)									;; Bjorn added 2012-05-15
+    (A/BE/262/95 F98011)								;; Bjorn added 2012-05-15
+
+    
   
+;; H7N2 antisera
+
+    (A/MulderA/57 F12049)								;; Kim added 2013-10-12
+    (A/MulderB/57 F12050)								;; Kim added 2013-10-12
+    (A/BakkerA/68 F12051)								;; Kim added 2013-10-12
+    (A/BakkerB/68 F12052)								;; Kim added 2013-10-12
+    (A/BI/16190A/68 F12021)								;; Kim added 2013-10-12
+    (A/BI/16190B/68 F12022)								;; Kim added 2013-10-12
+    (A/BI/93A/70 F12025)								;; Kim added 2013-10-12
+    (A/BI/93B/70 F12026)								;; Kim added 2013-10-12
+    (A/BI/21793A/72 F12027)								;; Kim added 2013-10-12
+    (A/BI/21793B/72 F12028)								;; Kim added 2013-10-12
+    (A/BI/1761A/76 F12029)								;; Kim added 2013-10-12
+    (A/BI/1761B/76 F12030)								;; Kim added 2013-10-12
+    (A/BI/2271A/76 F12031)								;; Kim added 2013-10-12
+    (A/BI/2271B/76 F12032)								;; Kim added 2013-10-12
+    (A/NL/233A/82 F12033)								;; Kim added 2013-10-12
+    (A/NL/233B/82 F12034)								;; Kim added 2013-10-12
+    (A/NL/620A/89 F12035)								;; Kim added 2013-10-12
+    (A/NL/620B/89 F12036)								;; Kim added 2013-10-12
+    (A/NL/823A/92 F12037)								;; Kim added 2013-10-12
+    (A/NL/823B/92 F12038)								;; Kim added 2013-10-12
+    (A/NL/179A/93 F12039)								;; Kim added 2013-10-12
+    (A/NL/179B/93 F12040)								;; Kim added 2013-10-12
+    (A/NL/178A/95 F12003)								;; Kim added 2013-10-12
+    (A/NL/178B/95 F12004)								;; Kim added 2013-10-12
+    (A/NL/301A/99 F12041)								;; Kim added 2013-10-12
+    (A/NL/301B/99 F12042)								;; Kim added 2013-10-12
+    (A/NL/213A/03 F12023)								;; Kim added 2013-10-12
+    (A/NL/213B/03 F12024)								;; Kim added 2013-10-12
+    (A/NL/132A/04 F12043)								;; Kim added 2013-10-12
+    (A/NL/132B/04 F12044)								;; Kim added 2013-10-12
+    (A/NL/69A/07 F12045)								;; Kim added 2013-10-12
+    (A/NL/69B/07 F12046)								;; Kim added 2013-10-12
+    (A/NL/69A/09 F12047)								;; Kim added 2013-10-12
+    (A/NL/69B/09 F12048)								;; Kim added 2013-10-12  
+    (A/NL/42A/06 F13038)								;; Kim added 2014-01-26
+    (A/NL/42B/06 F13039)								;; Kim added 2014-01-26
+    (A/NL/69A/07 F13040)								;; Kim added 2014-01-26
+    (A/NL/69B/07 F13041)								;; Kim added 2014-01-26
+    (A/NL/63A/11 F13044)								;; Kim added 2014-01-26
+    (A/NL/63B/11 F13045)								;; Kim added 2014-01-26  
+;; H3N2 antisera for updating map post 2002
+
+    (A/Brisbane/010/07 F07035)							       ;; Stefan added 2015-01-12    
+    (A/Ned/700/11 F12053)							       ;; Stefan added 2015-01-12   
+    (A/Ned/002/12 F12065)							       ;; Stefan added 2015-01-12    
+    (A/Ned/622/12 F13012)							       ;; Stefan added 2015-01-12    
+    (A/Victoria/361A/11 F13014)							       ;; Stefan added 2015-01-12    
+    (A/Victoria/361B/11 F13015)							       ;; Stefan added 2015-01-12    
+    (A/Ned/2249/13 F14009)							       ;; Stefan added 2015-01-12 
+   (IVR-165 F12057)					    		               ;; Stefan added 2015-01-12 
+   (X-223A F13016)							               ;; Stefan added 2015-01-12 
+
+;; H2 antisera
+
+	(Mallard/NL/31A/06	F12005)							;;	Bjorn	added	2013-11-25
+	(Mallard/NL/31B/06	F12006)							;;	Bjorn	added	2013-11-25
+	(Mallard/NL/14A/07	F12007)							;;	Bjorn	added	2013-11-25
+	(Mallard/NL/14B/07	F12008)							;;	Bjorn	added	2013-11-25
+	(Netherlands/K1A/63	F12009)							;;	Bjorn	added	2013-11-25
+	(Netherlands/K1B/63	F12010)							;;	Bjorn	added	2013-11-25
+	(Netherlands/B1A/68	F12011)							;;	Bjorn	added	2013-11-25
+	(Netherlands/B1B/68	F12012)							;;	Bjorn	added	2013-11-25
+	(Japan/305A/57	F70166)								;;	Bjorn	added	2013-11-25
+	(Japan/305B/57	F70225)								;;	Bjorn	added	2013-11-25
+	(Japan/305C/57	F75118)								;;	Bjorn	added	2013-11-25
+	(Japan/305D/57	F75119)								;;	Bjorn	added	2013-11-25
+	(Japan/305E/57	F78135)								;;	Bjorn	added	2013-11-25
+	(Japan/305F/57	F78136)								;;	Bjorn	added	2013-11-25
+	(Singapore/1A/57	F83050)							;;	Bjorn	added	2013-11-25
+	(Singapore/1B/57	F83051)							;;	Bjorn	added	2013-11-25
+	(Singapore/1C/57	R2273)							;;	Bjorn	added	2013-11-25
+	(England/1A/66		F15024)							;;	Stefan	added	2015-10-20
+	(England/1B/66		F15025)							;;	Stefan	added	2015-10-20
+	(Tokyo/3A/67		F15026)							;;	Stefan	added	2015-10-20
+	(Tokyo/3B/67		F15027)							;;	Stefan	added	2015-10-20
+
+
+;; New H5 antisera
+(A/mallard/Sweden/49/2002	F05026)		;;	Stefan added 2016-11-30
+(A/HongKong/483A/1997	F16033)			;;	Stefan added 2016-11-30
+(A/HongKong/483B/1997	F16034)			;;	Stefan added 2016-11-30
+(A/Vietnam/1194D/2004	F16039)			;;	Stefan added 2016-11-30
+(A/Vietnam/1194E/2004	F16040)			;;	Stefan added 2016-11-30
+(A/Indonesia/5F/2005	F16037)			;;	Stefan added 2016-11-30
+(A/Indonesia/5G/2005	F16038)			;;	Stefan added 2016-11-30
+(A/Anhui/1C/2005	F16044)			;;	Stefan added 2016-11-30
+(A/Iraq/755A/2006	F16013)			;;	Stefan added 2016-11-30
+(A/Iraq/755B/2006	F16014)			;;	Stefan added 2016-11-30
+(A/Chicken/Netherlands/EMC-3A/2014	F16021)		;;	Stefan added 2016-11-30
+(A/Chicken/Netherlands/EMC-3B/2014	F16022)		;;	Stefan added 2016-11-30
+(A/Guangzhou/39715A/2014	F16025)			;;	Stefan added 2016-11-30
+(A/Guangzhou/39715B/2014	F16026)			;;	Stefan added 2016-11-30
+(A/Egypt/NO1753A/2014	F16027)			;;	Stefan added 2016-11-30
+(A/Egypt/NO1753B/2014	F16028)			;;	Stefan added 2016-11-30
+(A/Guizhou/1A/2013	F16029)			;;	Stefan added 2016-11-30
+(A/Guizhou/1B/2013	F16030)			;;	Stefan added 2016-11-30
+(A/goose/EasternChina/1112A/2011	F16036)		;;	Stefan added 2016-11-30
+(A/goose/EasternChina/1112B/2011	F16035)		;;	Stefan added 2016-11-30
+(A/Duck/Bangladesh/19097A/2013	F16045)		;;	Stefan added 2016-11-30
+(A/Duck/Bangladesh/19097B/2013	F16046)		;;	Stefan added 2016-11-30
+(A/gyrfalcon/Washington/41088-6A/2014	F16055)	;;	Stefan added 2016-11-30
+(A/gyrfalcon/Washington/41088-6B/2014	F16056)	;;	Stefan added 2016-11-30
+(A/Anhui/1/2005_156TA_222QL_224GS_A	F16031)	;;	Stefan added 2016-11-30
+(A/Anhui/1/2005_156TA_222QL_224GS_B	F16032)	;;	Stefan added 2016-11-30
+(A/Cambodia/x0810301/13A		F17013) ;;	Stefan added 2016-06-29
+(A/Cambodia/x0810301/13B		F17014) ;;	Stefan added 2016-06-29
+(A/duck/Vietnam/NCVD-1283A/2012         F17030) ;;	Stefan added 2017-09-15
+(A/duck/Vietnam/NCVD-1283B/2012         F17031) ;;	Stefan added 2017-09-15
+(A/CHICKEN/JIANGSU/K0101A/2010          F17032) ;;	Stefan added 2017-09-15
+(A/CHICKEN/JIANGSU/K0101B/2010          F17033) ;;	Stefan added 2017-09-15
+(A/Sichuan/26221A/2014                  F17034) ;;	Stefan added 2017-09-15
+(A/Sichuan/26221B/2014                  F17035) ;;	Stefan added 2017-09-15
+(A/duck/Jiangxi/0114_NCJD064-PA/2015    F17036) ;;	Stefan added 2017-09-15
+(A/duck/Jiangxi/0114_NCJD064-PB/2015    F17037) ;;	Stefan added 2017-09-15
+(A/CHICKEN/CHIPING/0321A/2014           F17038) ;;	Stefan added 2017-09-15
+(A/CHICKEN/CHIPING/0321B/2014           F17039) ;;	Stefan added 2017-09-15
+
+
+;; Vaccine sera
+(A/Indonesia/5/2005_156TA_222QL_224GS_VACC                  F902) ;;	Stefan added 2017-09-15
+(A/Iraq/755/2006_VACC                                       F904) ;;	Stefan added 2017-09-15
+(A/turkey/Turkey/65596/2006_167TA_VACC                      F906) ;;	Stefan added 2017-09-15
+(A/Anhui/1/2005_156TA_222QL_224GS_VACC                      F908) ;;	Stefan added 2017-09-15
+(A/mallard/Sweden/49/2002_119KR_126DE_222QL_224GS_VACC      F909) ;;	Stefan added 2017-09-15
+(A/Vietnam/1194/2004_156TA_222QL_224GS_VACC                 F912) ;;	Stefan added 2017-09-15
   
-  
+))
 (defun ferret-to-strain (ferret)
   (let ((strain (caar (member ferret *ferret-strain-correspondence* 
 			      :test (^ (ferret strain-ferret-pair) (eql ferret (cadr strain-ferret-pair)))))))
